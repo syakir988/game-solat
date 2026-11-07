@@ -1,0 +1,4308 @@
+<!DOCTYPE html>
+<html lang="ms">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Susunan Rukun Solat — Edisi Kartun</title>
+    <!-- Font dependencies removed so this edition also runs offline as a single HTML file. -->
+    <style>
+      :root {
+          --primary: #2D9596;
+          --primary-dark: #1F6B6C;
+          --secondary: #D4AF37;
+          --secondary-dark: #A8861B;
+          --bg: #F5F5DC;
+          --bg-card: rgba(255, 255, 255, 0.94);
+          --accent: #9B7EBD;
+          --success: #2E7D32;
+          --success-glow: rgba(46, 125, 50, 0.55);
+          --error: #D32F2F;
+          --error-glow: rgba(211, 47, 47, 0.5);
+          --warning: #E65100;
+          --text-main: #232B2B;
+          --transition-fast: 150ms cubic-bezier(0, 0, 0.2, 1);
+          --transition-normal: 250ms cubic-bezier(0, 0, 0.2, 1);
+      }
+
+      * {
+          box-sizing: border-box;
+      }
+
+      body, html {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          font-family: "Segoe UI", Arial, sans-serif;
+          background: var(--bg);
+          color: var(--text-main);
+          -webkit-text-size-adjust: 100%;
+      }
+
+      #game-world {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          max-height: 100%;
+          overflow-y: scroll !important;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+          touch-action: pan-y;
+          overscroll-behavior-y: contain;
+          background-color: var(--bg);
+          background-repeat: repeat;
+          background-size: 360px auto;
+          display: flex;
+          flex-direction: column;
+          user-select: none;
+          -webkit-user-select: none;
+      }
+
+      .pattern-overlay {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background: radial-gradient(circle at 50% 25%, rgba(255,255,255,0.72) 0%, rgba(245,245,220,0.88) 100%);
+          z-index: 0;
+      }
+
+      /* Smooth snap-in animation for slotted posture */
+      @keyframes snapIn {
+          0% {
+              transform: scale(0.88);
+              opacity: 0.75;
+          }
+          55% {
+              transform: scale(1.03);
+          }
+          100% {
+              transform: scale(1);
+              opacity: 1;
+          }
+      }
+
+      .slot.just-snapped {
+          animation: snapIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      /* Green glow animation for correct posture */
+      @keyframes greenGlow {
+          0% {
+              box-shadow: 0 0 4px var(--success-glow);
+              border-color: #2E7D32;
+          }
+          50% {
+              box-shadow: 0 0 14px rgba(46, 125, 50, 0.85);
+              border-color: #1B5E20;
+          }
+          100% {
+              box-shadow: 0 0 5px var(--success-glow);
+              border-color: #2E7D32;
+          }
+      }
+
+      /* Red flash & shake animation for wrong posture */
+      @keyframes redFlash {
+          0% {
+              box-shadow: 0 0 3px var(--error-glow);
+              border-color: #D32F2F;
+              transform: translateX(0);
+          }
+          20% {
+              box-shadow: 0 0 16px rgba(211, 47, 47, 0.9);
+              border-color: #B71C1C;
+              transform: translateX(-4px);
+          }
+          40% {
+              box-shadow: 0 0 16px rgba(211, 47, 47, 0.9);
+              border-color: #D32F2F;
+              transform: translateX(4px);
+          }
+          60% {
+              box-shadow: 0 0 12px rgba(211, 47, 47, 0.7);
+              border-color: #D32F2F;
+              transform: translateX(-3px);
+          }
+          80% {
+              box-shadow: 0 0 8px rgba(211, 47, 47, 0.6);
+              border-color: #D32F2F;
+              transform: translateX(2px);
+          }
+          100% {
+              box-shadow: 0 0 4px var(--error-glow);
+              border-color: #D32F2F;
+              transform: translateX(0);
+          }
+      }
+
+      .slot.result-correct {
+          border-color: var(--success) !important;
+          background: #F1F8E9 !important;
+          animation: greenGlow 1.4s infinite alternate ease-in-out;
+      }
+
+      .slot.result-wrong {
+          border-color: var(--error) !important;
+          background: #FFEBEE !important;
+          animation: redFlash 0.5s ease-in-out;
+      }
+
+      /* A temporary, focused clue appears for a few seconds when requested. */
+      .quick-hint-panel {
+          margin: 4px 12px 3px;
+          padding: 8px 14px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background: linear-gradient(135deg, #FFFDF6 0%, #FFF5D6 100%);
+          color: #4A3A08;
+          border: 2px solid #D4AF37;
+          box-shadow: 0 3px 10px rgba(180, 140, 20, 0.18);
+          font-size: 13px;
+          font-weight: 600;
+          text-align: center;
+          animation: bannerSlideIn 0.2s ease;
+      }
+
+      .quick-hint-panel strong {
+          font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+          color: #A8861B;
+      }
+
+      .starter-hint-banner {
+          margin: 2px 12px 6px;
+          padding: 7px 12px;
+          border-radius: 10px;
+          font-family: "Segoe UI", Arial, sans-serif;
+          font-size: 12.5px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          background: #E8F5E9;
+          color: #1B5E20;
+          border: 1.5px solid #A5D6A7;
+          box-shadow: 0 1.5px 5px rgba(46, 125, 50, 0.1);
+      }
+
+      .drag-preview {
+          position: fixed;
+          pointer-events: none;
+          z-index: 3000;
+          opacity: 0.96;
+          transform: translate(-50%, -50%) scale(1.08);
+          transition: none;
+          box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+          border-color: #D4AF37 !important;
+          background: #193e3f !important;
+          width: 150px !important;
+      }
+      .drag-preview .icon-label {
+          color: #FFFFFF !important;
+      }
+
+      /* Overlay Modals (Answers, Victory, Game Over) */
+      .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.65);
+          backdrop-filter: blur(4px);
+          z-index: 2000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          animation: fadeIn 0.2s ease;
+      }
+
+      .modal-card {
+          background: white;
+          border-radius: 20px;
+          width: 100%;
+          max-width: 520px;
+          max-height: 90vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          box-shadow: 0 14px 40px rgba(0,0,0,0.32);
+          border: 3px solid var(--primary);
+      }
+
+      .modal-header {
+          background: var(--primary);
+          color: white;
+          padding: 14px 18px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+      }
+
+      .modal-header h2 {
+          margin: 0;
+          font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+          font-size: 22px;
+      }
+
+      .modal-close-btn {
+          background: rgba(255,255,255,0.2);
+          border: none;
+          color: white;
+          font-size: 22px;
+          font-weight: bold;
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      }
+
+      .modal-body {
+          padding: 14px 18px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+      }
+
+      .answer-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 7px 10px;
+          border-radius: 12px;
+          background: #F7FAF9;
+          border: 1px solid #E0ECE9;
+      }
+
+      .answer-num {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background: var(--primary);
+          color: white;
+          font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+          font-weight: 700;
+          font-size: 15px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+      }
+
+      .answer-thumb {
+          width: 40px;
+          height: 40px;
+          background: #E6F4F1;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+      }
+
+      .answer-thumb img {
+          width: 36px;
+          height: 36px;
+          object-fit: contain;
+      }
+
+      .answer-info {
+          display: flex;
+          flex-direction: column;
+      }
+
+      .answer-title {
+          font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          color: #222;
+      }
+
+      .answer-sub {
+          font-size: 12px;
+          color: #666;
+      }
+
+      .modal-footer {
+          padding: 12px 18px;
+          background: #F9F9F9;
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          border-top: 1px solid #EEE;
+      }
+
+      /* Outcome Modal Specifics (Victory / Game Over) */
+      .outcome-dialog {
+          background: white;
+          border-radius: 24px;
+          width: 90%;
+          max-width: 440px;
+          padding: 28px 24px 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          box-shadow: 0 16px 44px rgba(0,0,0,0.35);
+          animation: bounceIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      @keyframes bounceIn {
+          0% { transform: scale(0.7); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+      }
+
+      .outcome-icon {
+          font-size: 64px;
+          margin-bottom: 8px;
+          line-height: 1;
+      }
+
+      .outcome-title {
+          font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+          font-size: 28px;
+          font-weight: 700;
+          margin: 0 0 8px;
+      }
+
+      .outcome-desc {
+          font-size: 15px;
+          color: #555;
+          line-height: 1.45;
+          margin: 0 0 16px;
+      }
+
+      .outcome-stats-card {
+          width: 100%;
+          background: #F0F9F8;
+          border: 1px solid #D1EBE7;
+          border-radius: 14px;
+          padding: 12px 16px;
+          margin-bottom: 20px;
+          display: flex;
+          justify-content: space-around;
+      }
+
+      .outcome-stats-card { flex-wrap: wrap; gap: 10px 4px; }
+      .outcome-stat-item { min-width: 62px; }
+      .outcome-stat-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+      }
+
+      .stat-value {
+          font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+          font-size: 22px;
+          font-weight: 700;
+          color: var(--primary-dark);
+      }
+
+      .stat-label {
+          font-size: 12px;
+          color: #777;
+          font-weight: 600;
+          margin-top: 2px;
+      }
+
+      @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
+
+      #victory-particles-canvas {
+          position: fixed;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 2500;
+      }
+
+      .posture-icon.card-selected {
+          border: 2.5px solid #FFD700 !important;
+          box-shadow: 0 0 16px rgba(255, 215, 0, 0.75), inset 0 0 10px rgba(255, 215, 0, 0.3) !important;
+          transform: scale(1.03) !important;
+          animation: pulseSelected 1s infinite alternate ease-in-out;
+      }
+
+      .slot.slot-selected {
+          border: 2.5px solid #FFD700 !important;
+          box-shadow: 0 0 16px rgba(255, 215, 0, 0.75) !important;
+          background: #FFFDE7 !important;
+      }
+
+      @keyframes pulseSelected {
+          from { transform: scale(1.02); }
+          to { transform: scale(1.05); }
+      }
+
+      .tap-guide-banner {
+          margin: 4px 12px 6px;
+          padding: 8px 14px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%);
+          color: #5D4037;
+          border: 1.5px solid #FBC02D;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          font-size: 13px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          animation: bannerSlideIn 0.2s ease;
+      }
+
+      .btn-cancel-select {
+          background: #D32F2F;
+          color: white;
+          border: none;
+          padding: 4px 10px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+      }
+
+      .btn-slot-remove {
+          background: rgba(211, 47, 47, 0.12);
+          border: 1px solid rgba(211, 47, 47, 0.3);
+          color: #D32F2F;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: bold;
+          cursor: pointer;
+          margin-left: auto;
+          flex-shrink: 0;
+          transition: all var(--transition-fast);
+      }
+
+      .btn-slot-remove:active {
+          background: #D32F2F;
+          color: white;
+          transform: scale(0.9);
+      }
+
+      /* Language switch links with flags */
+      .lang-switch {
+          display: flex;
+          justify-content: flex-end;
+          flex-wrap: wrap;
+          gap: 8px;
+          width: 100%;
+          padding: 0 12px;
+          margin-bottom: 6px;
+      }
+
+      .lang-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          min-height: 40px;
+          padding: 6px 13px;
+          border-radius: 20px;
+          background: #FFFFFF;
+          border: 2px solid rgba(45, 149, 150, 0.35);
+          color: var(--primary-dark);
+          font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+          font-size: 13.5px;
+          font-weight: 600;
+          text-decoration: none;
+          cursor: pointer;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+          transition: all var(--transition-fast);
+          -webkit-tap-highlight-color: transparent;
+      }
+
+      .lang-link:hover {
+          text-decoration: underline;
+      }
+
+      .lang-link.active {
+          background: var(--primary);
+          color: #FFFFFF;
+          border-color: var(--primary);
+          text-decoration: none;
+      }
+
+      .lang-flag {
+          width: 28px;
+          height: 14px;
+          border-radius: 3px;
+          overflow: hidden;
+          display: inline-flex;
+          flex-shrink: 0;
+          box-shadow: 0 0 0 1px rgba(0,0,0,0.18);
+      }
+
+      .lang-flag svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+      }
+
+      .start-form-card .lang-switch {
+          justify-content: center;
+          padding: 0;
+          margin-bottom: 14px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+          * {
+              transition-duration: 0ms !important;
+              animation: none !important;
+          }
+      }
+
+      /* =====================================================================
+         TEMA KARTUN (susun-rukun-kartun.html)
+         ===================================================================== */
+      :root {
+          --kg-blue: #1B64C8;
+          --kg-blue-dark: #0E3F8F;
+          --kg-blue-light: #DDF1FF;
+          --kg-yellow: #FFD93B;
+          --kg-yellow-dark: #F2B705;
+          --kg-cream: #FFF8E6;
+          --kg-ink: #3B2A12;
+          --kg-display: "Arial Rounded MT Bold", "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+      }
+
+      #game-world {
+          background-color: #8FD3F4;
+          background-image: linear-gradient(180deg, #8FD3F4 0%, #CFEFFF 45%, #9BDB6E 100%);
+          background-size: cover;
+          background-position: center bottom;
+          background-repeat: no-repeat;
+          background-attachment: local;
+      }
+
+      .pattern-overlay { display: none; }
+
+      /* ---------- Bekas utama ---------- */
+      .game-container {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          max-width: 1280px;
+          margin: 0 auto;
+          min-height: min-content;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 10px 10px 24px;
+      }
+
+      .header-area { width: 100%; padding: 4px 4px 2px; text-align: center; }
+
+      .kg-header-row {
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          align-items: center;
+          gap: 12px;
+      }
+
+      /* Butang kembali (rumah) */
+      .kg-home-slot { display: flex; align-items: center; }
+      .kg-home {
+          display: grid;
+          place-items: center;
+          width: 58px;
+          height: 58px;
+          border-radius: 50%;
+          background: linear-gradient(160deg, #A56BF0 0%, #7A3FD6 100%);
+          border: 4px solid #fff;
+          box-shadow: 0 5px 0 #5B2AAE, 0 8px 16px rgba(60, 20, 120, 0.35);
+          color: #fff;
+          text-decoration: none;
+          cursor: pointer;
+          transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+          -webkit-tap-highlight-color: transparent;
+      }
+      .kg-home svg { width: 28px; height: 28px; display: block; }
+      .kg-home:hover, .kg-home:focus-visible { transform: translateY(-2px) scale(1.05); filter: brightness(1.08); outline: none; }
+      .kg-home:active { transform: translateY(3px) scale(0.97); box-shadow: 0 2px 0 #5B2AAE, 0 4px 8px rgba(60, 20, 120, 0.35); }
+
+      /* Tajuk */
+      .kg-title-wrap { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+      .kg-title {
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          font-family: var(--kg-display);
+          font-weight: 900;
+          line-height: 0.95;
+          letter-spacing: 0.01em;
+          -webkit-text-stroke: 7px var(--kg-blue);
+          paint-order: stroke fill;
+          text-shadow: 0 4px 0 var(--kg-blue-dark);
+      }
+      .kg-title-a { font-size: clamp(26px, 3.6vw, 46px); color: var(--kg-yellow); }
+      .kg-title-b { font-size: clamp(30px, 4.4vw, 56px); color: #fff; }
+      .kg-ribbon {
+          margin: 6px 0 0;
+          padding: 5px 22px;
+          max-width: 100%;
+          background: linear-gradient(180deg, #FFF3B0 0%, #FFE680 100%);
+          border: 2px solid #F2D14B;
+          border-radius: 8px;
+          box-shadow: 0 3px 6px rgba(120, 90, 0, 0.18);
+          color: #14306B;
+          font-family: var(--kg-display);
+          font-size: 14px;
+          font-weight: 700;
+      }
+
+      /* Statistik: skor, kemajuan, pemasa */
+      .kg-stats {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 10px;
+          border-radius: 26px;
+          background: linear-gradient(180deg, #FFFFFF 0%, #DDF1FF 100%);
+          border: 3px solid #fff;
+          box-shadow: 0 5px 14px rgba(20, 70, 140, 0.25);
+      }
+      .kg-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          height: 42px;
+          padding: 0 14px;
+          border-radius: 21px;
+          background: linear-gradient(180deg, #2A78DD 0%, #0F4FA8 100%);
+          border: 2px solid #7DB8FF;
+          color: #fff;
+          font-family: var(--kg-display);
+          font-size: 17px;
+          font-weight: 700;
+          white-space: nowrap;
+      }
+      .kg-score b { font-weight: 900; }
+      .kg-progress { position: relative; width: 140px; padding: 0; overflow: hidden; justify-content: flex-end; background: #0B3C86; }
+      .kg-progress-fill {
+          position: absolute;
+          inset: 0 auto 0 0;
+          background: linear-gradient(180deg, #5FD0FF 0%, #2A9BF0 100%);
+          transition: width 0.35s ease;
+          border-radius: 21px;
+      }
+      .kg-progress-text { position: relative; padding-right: 14px; font-size: 16px; }
+
+      .timer-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          height: 42px;
+          padding: 0 16px;
+          border-radius: 21px;
+          font-family: var(--kg-display);
+          font-size: 22px;
+          font-weight: 900;
+          transition: all var(--transition-normal);
+      }
+      .timer-badge.normal { background: linear-gradient(180deg, #FFE27A 0%, #FFC01F 100%); border: 3px solid #F59E0B; color: #6B3A00; box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4); }
+      .timer-badge.warning { background: linear-gradient(180deg, #FFD08A 0%, #FF9A3D 100%); border: 3px solid #E4660B; color: #7A2C00; box-shadow: 0 3px 10px rgba(228, 102, 11, 0.5); }
+      .timer-badge.danger { background: linear-gradient(180deg, #FFB3B3 0%, #FF6B6B 100%); border: 3px solid #D32F2F; color: #7A0A0A; box-shadow: 0 0 14px rgba(211, 47, 47, 0.7); animation: pulseDanger 0.8s infinite alternate; }
+      .kg-clock { font-size: 22px; line-height: 1; }
+
+      /* ---------- Susun atur permainan ---------- */
+      .gameplay-area {
+          width: 100%;
+          max-width: 1236px;
+          margin: 10px auto 0;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+      }
+
+      /* Papan (kad gambar + petak jawapan) */
+      .slots-area {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 18px 14px;
+          width: 100%;
+          padding: 22px 16px 18px;
+          border-radius: 30px;
+          background: linear-gradient(180deg, #FFFDF2 0%, #FFF4D0 100%);
+          border: 4px solid #FFEBA8;
+          box-shadow: 0 10px 24px rgba(60, 90, 30, 0.22), inset 0 0 0 3px rgba(255, 255, 255, 0.7);
+      }
+
+      .slot {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          width: calc((100% - 28px) / 3);
+          height: auto;
+          min-height: 0;
+          padding: 8px 8px 10px;
+          border: 3px solid #F3E6BD;
+          border-radius: 20px;
+          background: #FFFFFF;
+          box-shadow: 0 4px 0 #EBDDB0, 0 8px 14px rgba(120, 90, 20, 0.12);
+          transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+      }
+      .slot.slot-centered-last { grid-column: auto; max-width: none; margin-inline: 0; }
+      .slot.drag-over { border-color: var(--kg-yellow-dark); background: #FFF9D6; transform: translateY(-3px) scale(1.02); box-shadow: 0 6px 0 #F2D14B, 0 12px 20px rgba(242, 183, 5, 0.35); }
+      .slot.filled { border-style: solid; border-color: #BFDDF8; background: #FFFFFF; cursor: grab; }
+
+      /* Lencana nombor berwarna */
+      .slot-number {
+          position: absolute;
+          top: -10px;
+          left: -8px;
+          z-index: 3;
+          display: grid;
+          place-items: center;
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: #2EA44F;
+          border: 3px solid #fff;
+          color: #fff;
+          font-family: var(--kg-display);
+          font-size: 19px;
+          font-weight: 900;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      }
+      .slot:nth-child(6n + 1) .slot-number { background: linear-gradient(160deg, #3FC76A, #1E9446); }
+      .slot:nth-child(6n + 2) .slot-number { background: linear-gradient(160deg, #3F9BFF, #1B64C8); }
+      .slot:nth-child(6n + 3) .slot-number { background: linear-gradient(160deg, #A56BF0, #7A3FD6); }
+      .slot:nth-child(6n + 4) .slot-number { background: linear-gradient(160deg, #FFA43D, #E8710A); }
+      .slot:nth-child(6n + 5) .slot-number { background: linear-gradient(160deg, #FF6B6B, #D32F2F); }
+      .slot:nth-child(6n + 6) .slot-number { background: linear-gradient(160deg, #3CCBC0, #138F86); }
+      .slot.result-correct .slot-number { background: linear-gradient(160deg, #3FC76A, #1E9446); }
+      .slot.result-wrong .slot-number { background: linear-gradient(160deg, #FF6B6B, #D32F2F); }
+
+      /* Kad kosong: gambar petunjuk + kotak "?" */
+      .slot-empty-label { display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: center; }
+      .slot-picture {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          aspect-ratio: 3 / 2;
+          padding: 10px 12px;
+          border-radius: 14px;
+          overflow: hidden;
+          background:
+              radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 55%),
+              linear-gradient(180deg, #CFEFFF 0%, #FFF3C9 100%);
+          border: 2px solid #E6EEF5;
+      }
+      .slot-hint-text {
+          display: block;
+          font-family: var(--kg-display);
+          font-size: 12.5px;
+          font-weight: 700;
+          line-height: 1.3;
+          color: #29508F;
+          text-align: center;
+          display: -webkit-box;
+          -webkit-line-clamp: 5;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+      }
+      .slot-drop {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          min-height: 44px;
+          border: 2.5px dashed #6FB6F2;
+          border-radius: 12px;
+          background: #EAF6FF;
+          color: #6FA9DA;
+          font-family: var(--kg-display);
+          font-weight: 700;
+      }
+      .slot-q { font-size: 26px; font-weight: 900; line-height: 1; color: #8CC4F2; }
+      .slot-empty-main { font-size: 12.5px; color: #5C98CC; }
+
+      /* Kad terisi: gambar rukun + nama */
+      .slot-content { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+      .slot-art-thumb {
+          width: 100%;
+          aspect-ratio: 3 / 2;
+          border-radius: 14px;
+          overflow: hidden;
+          background: #DDF1FF;
+          border: 2px solid #CFE6F8;
+      }
+      .slot-art-thumb img, .slot-art-thumb svg { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+      .slot-art-thumb .svg-fallback { padding: 14px; }
+      .slot-text-group {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 44px;
+          padding: 4px 8px;
+          border-radius: 12px;
+          background: #E6F7EA;
+          border: 2.5px solid #7FD08F;
+          text-align: center;
+      }
+      .slot-icon-label { font-family: var(--kg-display); font-size: 13px; font-weight: 700; line-height: 1.2; color: #1E6B35; }
+      .slot-icon-desc { display: none; }
+
+      .slot.result-correct { border-color: #2E7D32 !important; background: #F1FBEA !important; }
+      .slot.result-correct .slot-text-group { background: #CFF1D2; border-color: #2E9E4A; }
+      .slot.result-wrong { border-color: #D32F2F !important; background: #FFF0F0 !important; }
+      .slot.result-wrong .slot-text-group { background: #FFD9D9; border-color: #E86A6A; }
+      .slot.result-wrong .slot-icon-label { color: #A31515; }
+      .slot-status-badge {
+          position: absolute;
+          top: -10px;
+          right: -8px;
+          z-index: 3;
+          display: grid;
+          place-items: center;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          border: 3px solid #fff;
+          color: #fff;
+          font-size: 16px;
+          font-weight: 900;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      }
+      .slot-status-badge.correct { background: #2E9E4A; }
+      .slot-status-badge.wrong { background: #D32F2F; }
+      .btn-slot-remove { position: absolute; top: 14px; right: 14px; z-index: 3; margin: 0; background: rgba(255, 255, 255, 0.92); }
+
+      /* ---------- Panel kad rukun (kanan) ---------- */
+      .tray-area {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          padding: 12px;
+          border-radius: 28px;
+          background: linear-gradient(180deg, #EAF7FF 0%, #CFEAFB 100%);
+          border: 4px solid #FFEBA8;
+          box-shadow: 0 10px 24px rgba(20, 70, 140, 0.22), inset 0 0 0 3px rgba(255, 255, 255, 0.7);
+      }
+      .tray-header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+      .tray-label {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 14px;
+          border-radius: 16px;
+          background: linear-gradient(180deg, #2A78DD 0%, #0F4FA8 100%);
+          border: 2px solid #7DB8FF;
+          color: #fff;
+          font-family: var(--kg-display);
+          font-size: 14px;
+          font-weight: 700;
+          line-height: 1.3;
+      }
+      .tray-hand { font-size: 30px; line-height: 1; flex: none; }
+      .tray-count {
+          align-self: flex-end;
+          padding: 3px 12px;
+          border-radius: 12px;
+          background: #FFF3B0;
+          border: 2px solid #F2D14B;
+          color: #6B4A00;
+          font-family: var(--kg-display);
+          font-size: 12px;
+          font-weight: 700;
+      }
+      .tray {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 9px;
+      }
+      .tray-empty-hint { grid-column: 1 / -1; padding: 18px 10px; text-align: center; color: #29508F; font-family: var(--kg-display); font-weight: 700; }
+
+      .posture-icon {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+          height: auto;
+          min-height: 64px;
+          padding: 7px 10px 7px 22px;
+          border-radius: 16px;
+          background: linear-gradient(180deg, #FFEB8A 0%, #FFD23F 100%);
+          border: 2.5px solid #F2B705;
+          box-shadow: 0 4px 0 #E0A200, 0 7px 12px rgba(150, 100, 0, 0.22);
+          cursor: grab;
+          transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+          touch-action: pan-y;
+          -webkit-user-drag: none;
+      }
+      .posture-icon::before {
+          content: "";
+          position: absolute;
+          left: 7px;
+          top: 50%;
+          width: 9px;
+          height: 22px;
+          transform: translateY(-50%);
+          background-image: radial-gradient(circle, #E8870A 2.2px, transparent 2.6px);
+          background-size: 9px 8px;
+          opacity: 0.9;
+      }
+      .posture-icon:active { cursor: grabbing; }
+      .posture-icon:hover { transform: translateY(-2px); filter: brightness(1.05); box-shadow: 0 6px 0 #E0A200, 0 10px 16px rgba(150, 100, 0, 0.28); }
+      .posture-icon.dragging { opacity: 0.35; transform: scale(0.92); }
+      .posture-art-wrap {
+          flex: none;
+          width: 62px;
+          height: 46px;
+          border-radius: 10px;
+          overflow: hidden;
+          background: #fff;
+          border: 2px solid #fff;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+      }
+      .posture-art-wrap img, .posture-art-wrap svg { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+      .posture-art-wrap .svg-fallback { padding: 4px; }
+      .posture-icon .icon-label {
+          width: 100%;
+          font-family: var(--kg-display);
+          font-size: 13.5px;
+          font-weight: 700;
+          line-height: 1.2;
+          color: var(--kg-ink);
+          text-shadow: none;
+          text-align: left;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+      }
+      .drag-preview {
+          background: linear-gradient(180deg, #FFEB8A 0%, #FFD23F 100%) !important;
+          border-color: #F2B705 !important;
+          width: 190px !important;
+          box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4) !important;
+      }
+      .drag-preview .icon-label { color: var(--kg-ink) !important; }
+      .posture-icon.card-selected {
+          border: 3px solid #1B64C8 !important;
+          box-shadow: 0 0 0 4px rgba(27, 100, 200, 0.35), 0 4px 0 #E0A200 !important;
+      }
+      .slot.slot-selected { border: 3px solid #1B64C8 !important; box-shadow: 0 0 0 4px rgba(27, 100, 200, 0.3) !important; background: #F2F8FF !important; }
+
+      /* ---------- Banner & pembayang ---------- */
+      .result-banner, .quick-hint-panel, .starter-hint-banner, .tap-guide-banner {
+          margin: 0;
+          border-radius: 16px;
+          font-family: var(--kg-display);
+          border-width: 3px;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+      }
+
+      /* ---------- Bar butang tindakan + maskot ---------- */
+      .actions-bar {
+          position: relative;
+          z-index: 30;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          width: 100%;
+          max-width: 1236px;
+          margin: 0 auto;
+          padding: 12px 8px 14px;
+      }
+      .btn {
+          min-width: 168px;
+          padding: 13px 22px;
+          border-radius: 24px;
+          border: 3px solid #fff;
+          font-family: var(--kg-display);
+          font-size: 16px;
+          font-weight: 900;
+          cursor: pointer;
+          box-shadow: 0 5px 0 rgba(0, 0, 0, 0.22), 0 9px 16px rgba(0, 0, 0, 0.18);
+          transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+      }
+      .btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
+      .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22), 0 4px 8px rgba(0, 0, 0, 0.18); }
+      .btn-primary { background: linear-gradient(180deg, #4BD36F 0%, #1E9446 100%); color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+      .btn-primary.btn-ready { animation: pulseReady 1.2s infinite alternate ease-in-out; }
+      .btn-accent { background: linear-gradient(180deg, #FFE27A 0%, #FFB81F 100%); color: #6B3A00; }
+      .btn-secondary { background: linear-gradient(180deg, #FFFFFF 0%, #DDF1FF 100%); color: #0F4FA8; border-color: #9CCBF5; }
+      .btn-danger { background: linear-gradient(180deg, #FF8A8A 0%, #D32F2F 100%); color: #fff; }
+
+      /* Maskot */
+      .kg-mascot {
+          position: absolute;
+          left: 6px;
+          bottom: 0;
+          display: flex;
+          align-items: flex-end;
+          gap: 6px;
+          pointer-events: none;
+          z-index: 2;
+      }
+      .kg-mascot img { display: block; height: 112px; width: auto; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.28)); }
+      .kg-bubble {
+          position: relative;
+          margin-bottom: 38px;
+          max-width: 165px;
+          padding: 10px 16px;
+          border-radius: 22px;
+          background: linear-gradient(180deg, #2BB3D8 0%, #1488B0 100%);
+          border: 3px solid #fff;
+          box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25);
+          color: #fff;
+          font-family: var(--kg-display);
+          font-size: 14px;
+          font-weight: 700;
+          line-height: 1.3;
+          text-align: center;
+      }
+      .kg-bubble::before {
+          content: "";
+          position: absolute;
+          left: -12px;
+          bottom: 14px;
+          border: 8px solid transparent;
+          border-right: 12px solid #fff;
+      }
+      .kg-actions-center { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+      /* ---------- Modal kemenangan / tamat masa ---------- */
+      .modal-overlay { background: rgba(14, 63, 143, 0.55); }
+      .outcome-dialog { border: 5px solid #FFD93B !important; background: linear-gradient(180deg, #FFFFFF 0%, #FFF8E6 100%) !important; box-shadow: 0 16px 44px rgba(14, 63, 143, 0.4) !important; }
+      .outcome-title { font-family: var(--kg-display); }
+      .outcome-stats-card { background: #EAF6FF; border: 2px solid #BFDDF8; }
+      .stat-value { color: #0F4FA8; }
+
+      /* ---------- Responsif ---------- */
+      @media (min-width: 1100px) {
+          .slot { width: calc((100% - 42px) / 4); }
+      }
+
+      /* Desktop / tablet landskap: papan di kiri, panel kad di kanan */
+      @media (min-width: 980px) and (min-height: 560px) {
+          .gameplay-area {
+              display: grid;
+              grid-template-columns: minmax(0, 1.5fr) minmax(330px, 0.72fr);
+              column-gap: 18px;
+              row-gap: 10px;
+              align-items: start;
+          }
+          .result-banner, .quick-hint-panel, .starter-hint-banner, .tap-guide-banner { grid-column: 1 / -1; }
+          .slots-area { grid-column: 1; }
+          .tray-area {
+              grid-column: 2;
+              position: sticky;
+              top: 10px;
+              max-height: calc(100vh - 150px);
+          }
+          .tray { grid-template-columns: 1fr; overflow-y: auto; padding: 2px 4px 8px 2px; scrollbar-width: thin; }
+          .actions-bar {
+              position: sticky;
+              bottom: 0;
+              padding: 22px 8px 14px;
+              pointer-events: none;
+              background: linear-gradient(180deg, rgba(155, 219, 110, 0) 0%, rgba(155, 219, 110, 0.55) 55%, rgba(155, 219, 110, 0.75) 100%);
+          }
+          .actions-bar .btn { pointer-events: auto; }
+      }
+
+      /* Tablet portrait */
+      @media (max-width: 979px) {
+          .kg-mascot img { height: 80px; }
+          .kg-bubble { margin-bottom: 30px; max-width: 150px; font-size: 12.5px; padding: 8px 12px; }
+          .tray { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      @media (max-width: 760px) {
+          .kg-header-row { grid-template-columns: auto 1fr; grid-template-areas: "home title" "stats stats"; }
+          .kg-home-slot { grid-area: home; }
+          .kg-title-wrap { grid-area: title; }
+          .kg-stats { grid-area: stats; justify-content: center; flex-wrap: wrap; padding: 6px 8px; gap: 8px; }
+          .kg-pill, .timer-badge { height: 38px; font-size: 15px; padding: 0 12px; }
+          .kg-progress { width: 110px; padding: 0; }
+          .timer-badge { font-size: 18px; }
+          .kg-home { width: 48px; height: 48px; }
+          .kg-ribbon { font-size: 12px; padding: 4px 12px; }
+          .kg-mascot { display: none; }
+      }
+      @media (max-width: 560px) {
+          .slot { width: calc((100% - 14px) / 2); padding: 6px 6px 8px; }
+          .slots-area { padding: 18px 10px 14px; gap: 16px 10px; }
+          .slot-hint-text { font-size: 11px; -webkit-line-clamp: 6; }
+          .slot-picture { padding: 6px 8px; }
+          .btn { min-width: 0; flex: 1 1 100%; }
+          .tray { grid-template-columns: 1fr; }
+          .game-container { padding: 8px 6px 20px; }
+      }
+
+        
+      /* Banner keputusan semakan (hasil semak jawapan) */
+      .result-banner {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 10px 18px;
+          border: 3px solid;
+          font-size: 15px;
+          font-weight: 700;
+          line-height: 1.4;
+          text-align: center;
+      }
+      .result-banner.success { background: linear-gradient(180deg, #E6F9EA 0%, #CFF1D2 100%); border-color: #2E9E4A; color: #17602B; }
+      .result-banner.partial { background: linear-gradient(180deg, #FFF6D0 0%, #FFE9A0 100%); border-color: #F2B705; color: #6B4A00; }
+    
+      /* ===================== SESI BERKUMPULAN ===================== */
+      .outcome-dialog { max-height: 94vh; overflow-y: auto; }
+      .sess-setup { width: min(440px, 100%); }
+      .sess-field { display: block; width: 100%; margin: 8px 0; text-align: left; }
+      .sess-field > span { display: block; margin-bottom: 4px; font-family: var(--kg-display); font-weight: 700; font-size: 13px; color: #0F4FA8; }
+      .sess-field input {
+          width: 100%;
+          box-sizing: border-box;
+          padding: 12px 14px;
+          border-radius: 14px;
+          border: 3px solid #BFDDF8;
+          background: #fff;
+          color: #232B2B;
+          font-family: var(--kg-display);
+          font-size: 17px;
+          outline: none;
+      }
+      .sess-field input:focus { border-color: #1B64C8; box-shadow: 0 0 0 4px rgba(27, 100, 200, 0.2); }
+      .sess-count { margin: 6px 0 4px; min-height: 1em; font-size: 13px; color: #4B5A5A; text-align: center; }
+      .sess-actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; width: 100%; margin: 14px auto 0; }
+      .sess-actions .btn { flex: 1 1 150px; min-width: 0; max-width: 300px; padding: 11px 8px; font-size: 15px; }
+      .sess-line {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          margin-top: 10px;
+          padding: 8px 12px;
+          border-radius: 14px;
+          background: #FFF8E1;
+          border: 2px solid #F2D14B;
+          color: #5A4614;
+          font-size: 14px;
+      }
+      .kg-player {
+          margin-top: 4px;
+          padding: 3px 12px;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.92);
+          border: 2px solid #BFDDF8;
+          color: #0F4FA8;
+          font-family: var(--kg-display);
+          font-size: 13px;
+          font-weight: 700;
+      }
+      .lb-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 2100;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 16px;
+          background: rgba(14, 63, 143, 0.6);
+          backdrop-filter: blur(4px);
+      }
+      .lb-card {
+          width: min(580px, 100%);
+          max-height: 92vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          border-radius: 26px;
+          background: linear-gradient(180deg, #FFFFFF 0%, #FFF8E6 100%);
+          border: 5px solid #FFD93B;
+          box-shadow: 0 16px 44px rgba(14, 63, 143, 0.45);
+      }
+      .lb-head { padding: 14px 18px 4px; text-align: center; }
+      .lb-head h2 { margin: 0; font-family: var(--kg-display); font-size: 24px; color: #0F4FA8; }
+      .lb-tabs { display: flex; justify-content: center; gap: 8px; padding: 8px 16px; }
+      .lb-tab, .lb-sort button {
+          padding: 7px 18px;
+          border-radius: 999px;
+          border: 2px solid #BFDDF8;
+          background: #fff;
+          color: #0F4FA8;
+          font-family: var(--kg-display);
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+      }
+      .lb-tab.on, .lb-sort button.on { background: linear-gradient(180deg, #2A78DD, #0F4FA8); border-color: #0F4FA8; color: #fff; }
+      .lb-body { overflow: auto; padding: 0 14px 4px; }
+      .lb-sort { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 6px; font-size: 13px; color: #4B5A5A; }
+      .lb-sort button { padding: 4px 12px; font-size: 13px; }
+      .lb-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: 14px; color: #232B2B; }
+      .lb-table th { padding: 2px 8px; text-align: left; font-size: 12px; color: #6B5B2A; }
+      .lb-table td { padding: 8px; background: #fff; border-top: 2px solid #E6EEF5; border-bottom: 2px solid #E6EEF5; }
+      .lb-table td:first-child { border-left: 2px solid #E6EEF5; border-radius: 12px 0 0 12px; }
+      .lb-table td:last-child { border-right: 2px solid #E6EEF5; border-radius: 0 12px 12px 0; }
+      .lb-row-me td { background: #FFF3B0; border-color: #F2D14B; }
+      .lb-rank { width: 44px; font-weight: 900; font-size: 16px; white-space: nowrap; }
+      .lb-name { font-weight: 700; }
+      .lb-name small { display: block; font-weight: 400; font-size: 11px; color: #6B7A7A; }
+      .lb-empty { margin: 22px 8px; text-align: center; color: #4B5A5A; }
+      .lb-note { margin: 4px 14px 0; text-align: center; font-size: 12px; color: #6B5B2A; }
+      .lb-foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 10px 14px 14px; }
+      .lb-foot .btn { min-width: 0; padding: 9px 14px; font-size: 14px; }
+      @media (max-width: 480px) {
+          .sess-actions { grid-template-columns: 1fr; }
+          .lb-table { font-size: 13px; }
+          .lb-table td, .lb-table th { padding: 6px 5px; }
+      }
+
+      .stat-value.stat-name {
+          font-size: 17px; line-height: 1.15; max-width: 150px;
+          overflow-wrap: anywhere; text-align: center; color: #0F4FA8;
+      }
+    </style>  </head>
+  <body>
+    <div id="game-world"></div>
+
+    <script>
+      /*
+       * ===================== PERMAINAN SUSUN RUKUN (susunan-rukun.html) =====================
+       * Fail 2 daripada 3. Halaman Utama → index.html, Kuiz → kuiz.html
+       *
+       * Susunan Rukun Solat (Prayer Steps Sequence)
+       * Bahasa Melayu edition with 2-minute countdown timer, sequence checker,
+       * visual feedback (green glow on correct, red flash on wrong),
+       * victory and game over states.
+       */
+      let activeTimerInterval = null;
+      let activeHintTimeout = null;
+      /* ---- Bahasa & navigasi antara halaman (dikongsi oleh ketiga-tiga fail) ---- */
+      const SOLAT_PAGES = {
+        menu: 'index.html', // Halaman kedua: pilih kuiz / permainan
+        puzzle: 'game.html',
+        quiz: 'quiz.html',
+      };
+
+      function getInitialLang() {
+        try {
+          const q = new URLSearchParams(window.location.search).get('lang');
+          if (q === 'en' || q === 'ms') return q;
+        } catch (e) {}
+        try {
+          const s = window.localStorage.getItem('solat-lang');
+          if (s === 'en' || s === 'ms') return s;
+        } catch (e) {}
+        return 'ms';
+      }
+
+      function saveLang(code) {
+        try {
+          window.localStorage.setItem('solat-lang', code);
+        } catch (e) {}
+      }
+
+      let currentLang = getInitialLang(); // 'ms' | 'en'
+      try {
+        document.documentElement.lang = currentLang;
+      } catch (e) {}
+
+      function pageUrl(page) {
+        return SOLAT_PAGES[page] + '?lang=' + encodeURIComponent(currentLang);
+      }
+
+      function goTo(page, delay) {
+        // Jeda pendek supaya bunyi klik sempat kedengaran sebelum halaman bertukar.
+        setTimeout(() => {
+          window.location.href = pageUrl(page);
+        }, delay || 0);
+      }
+
+      const I18N = {
+        ms: {
+          titleA: 'Susunan',
+          titleB: 'Rukun Solat',
+          score: 'Skor',
+          dragGuide: 'Seret dan lepas kad rukun yang betul ke setiap petak.',
+          mascotSay: 'Jom susun rukun solat dengan betul!',
+          title: '🕌 {n} Rukun Solat',
+          timeLeft: 'Baki Masa',
+          subtitle: 'Susun kesemua {n} rukun solat mengikut urutan yang betul',
+          incomplete: '⚠️ Sila lengkapkan kesemua {n} rukun ({p}/{n}) sebelum menyemak!',
+          allCorrect: "✨ Masha'Allah! Kesemua {n} rukun solat tersusun dengan tepat!",
+          partial: 'Hasil: <b>{c}/{n} tepat</b>. Tukar kedudukan kad yang ditanda merah & semak semula.',
+          hint: 'Pembayang',
+          hintFor: 'Pembayang Rukun {i}',
+          allPlacedHint: 'Semua {n} rukun telah disusun. Tekan "Semak Jawapan" untuk menyemak ketepatan.',
+          guide: 'Panduan',
+          guideText: 'Susun rukun mengikut tertib solat yang betul.',
+          selected: 'dipilih. Ketik mana-mana slot untuk meletakkannya.',
+          pillar: 'Rukun',
+          cancel: '✕ Batal',
+          correct: 'Betul',
+          wrong: 'Salah',
+          returnCard: 'Pulangkan kad ke pilihan',
+          pillarN: 'Rukun {i}',
+          tapAuto: '(Ketik kad untuk auto-ke-slot)',
+          trayLabel: 'Kad Pilihan Rukun Solat',
+          trayCount: '{k} kad belum disusun',
+          trayEmpty: 'Semua {n} rukun telah disusun! Tekan "Semak Jawapan" di bawah.',
+          check: 'Semak Jawapan',
+          showHint: '💡 Tunjuk Pembayang',
+          showHintTitle: 'Papar pembayang ringkas selama 5 saat',
+          playAgain: '↺ Main Semula',
+          home: 'Kembali',
+          winTitle: "Masha'Allah! Tahniah!",
+          winDesc: 'Anda telah berjaya menyusun kesemua <b>{n} rukun solat</b> dengan urutan dan tertib yang sempurna!',
+          timeTaken: 'Masa Diambil',
+          accuracy: 'Ketepatan',
+          totalScore: 'Jumlah Skor',
+          setupTitle: 'Sesi Permainan',
+          setupDesc: 'Masukkan nama pemain sebelum bermula. Skor dan masa diambil akan dipaparkan pada kad keputusan.',
+          playerName: 'Nama Pemain',
+          groupName: 'Kumpulan (pilihan)',
+          namePlaceholder: 'Contoh: Aisyah',
+          nameRequired: 'Sila isi nama pemain dahulu sebelum mula bermain.',
+          groupPlaceholder: 'Contoh: Kumpulan A',
+          startPlay: '▶ Mula Bermain',
+          guest: 'Pemain {n}',
+          playersInSession: '{n} pemain dalam sesi ini',
+          leaderboard: '🏆 Papan Kedudukan',
+          nextPlayer: '👥 Pemain Seterusnya',
+          yourRank: 'Kedudukan: <b>#{r}</b> daripada {n} pemain',
+          lbTitle: 'Papan Kedudukan',
+          tabIndividual: 'Individu',
+          tabGroup: 'Kumpulan',
+          colName: 'Nama',
+          colScore: 'Skor',
+          colAccuracy: 'Ketepatan',
+          colTime: 'Baki Masa',
+          colGroup: 'Kumpulan',
+          colMembers: 'Ahli',
+          colTotal: 'Jumlah',
+          colAverage: 'Purata',
+          sortBy: 'Susun ikut',
+          noEntries: 'Belum ada skor. Mulakan permainan untuk muncul di papan kedudukan.',
+          noGroups: 'Belum ada kumpulan. Masukkan nama kumpulan semasa mula bermain.',
+          tieNote: 'Susunan: skor tertinggi dahulu, kemudian baki masa terbanyak. Setiap pemain dikira berdasarkan keputusan terbaiknya.',
+          storageWarn: 'Penyimpanan pelayar tidak tersedia. Skor hanya kekal selagi halaman ini dibuka.',
+          exportCsv: '⬇ Muat Turun CSV',
+          newSession: '🗑 Sesi Baharu',
+          confirmNew: 'Tekan sekali lagi untuk padam semua skor',
+          close: 'Tutup',
+          doneTitle: 'Tahniah! Permainan Selesai',
+          doneDesc: 'Anda menyusun <b>{c} daripada {n} rukun</b> dengan betul. Cuba lagi untuk mendapat skor penuh!',
+          loseTitle: 'Masa Telah Tamat!',
+          loseDesc: 'Masa telah tamat. Teruskan latihan untuk memantapkan hafazan kesemua {n} rukun solat!',
+          correctPillars: 'Rukun Betul',
+          retry: '↺ Cuba Lagi',
+          quiz: '🎯 Cabaran Seterusnya',
+          downloadCert: '📥 Muat Turun Sijil',
+          certTitle: 'SIJIL ANUGERAH',
+          certAwarded: 'Dengan ini dianugerahkan kepada',
+          certReason: 'kerana telah berjaya melengkapkan cabaran dengan',
+          certDate: 'Tarikh',
+        },
+        en: {
+          titleA: 'Prayer Pillars',
+          titleB: 'Sequence',
+          score: 'Score',
+          dragGuide: 'Drag and drop the correct pillar card into each box.',
+          mascotSay: "Let's arrange the prayer pillars correctly!",
+          title: '🕌 {n} Pillars of Prayer',
+          timeLeft: 'Time Left',
+          subtitle: 'Arrange all {n} pillars of prayer in the correct order',
+          incomplete: '⚠️ Please complete all {n} pillars ({p}/{n}) before checking!',
+          allCorrect: "✨ Masha'Allah! All {n} pillars of prayer are in the correct order!",
+          partial: 'Result: <b>{c}/{n} correct</b>. Move the cards marked red & check again.',
+          hint: 'Hint',
+          hintFor: 'Hint for Pillar {i}',
+          allPlacedHint: 'All {n} pillars are placed. Press "Check Answer" to check accuracy.',
+          guide: 'Guide',
+          guideText: 'Arrange the pillars in the correct order of prayer.',
+          selected: 'selected. Tap any slot to place it.',
+          pillar: 'Pillar',
+          cancel: '✕ Cancel',
+          correct: 'Correct',
+          wrong: 'Wrong',
+          returnCard: 'Return card to choices',
+          pillarN: 'Pillar {i}',
+          tapAuto: '(Tap a card to auto-place)',
+          trayLabel: 'Prayer Pillar Cards',
+          trayCount: '{k} cards left',
+          trayEmpty: 'All {n} pillars are placed! Press "Check Answer" below.',
+          check: 'Check Answer',
+          showHint: '💡 Show Hint',
+          showHintTitle: 'Show a short hint for 5 seconds',
+          playAgain: '↺ Play Again',
+          home: 'Back',
+          winTitle: "Masha'Allah! Well Done!",
+          winDesc: 'You have arranged all <b>{n} pillars of prayer</b> in the perfect order!',
+          timeTaken: 'Time Taken',
+          accuracy: 'Accuracy',
+          totalScore: 'Total Score',
+          setupTitle: 'Game Session',
+          setupDesc: 'Enter the player name before starting. Your score and time taken are shown on the result card.',
+          playerName: 'Player Name',
+          groupName: 'Group (optional)',
+          namePlaceholder: 'e.g. Aisyah',
+          nameRequired: 'Please enter the player name before you start playing.',
+          groupPlaceholder: 'e.g. Group A',
+          startPlay: '▶ Start Playing',
+          guest: 'Player {n}',
+          playersInSession: '{n} players in this session',
+          leaderboard: '🏆 Leaderboard',
+          nextPlayer: '👥 Next Player',
+          yourRank: 'Rank: <b>#{r}</b> of {n} players',
+          lbTitle: 'Leaderboard',
+          tabIndividual: 'Individual',
+          tabGroup: 'Group',
+          colName: 'Name',
+          colScore: 'Score',
+          colAccuracy: 'Accuracy',
+          colTime: 'Time Left',
+          colGroup: 'Group',
+          colMembers: 'Members',
+          colTotal: 'Total',
+          colAverage: 'Average',
+          sortBy: 'Sort by',
+          noEntries: 'No scores yet. Start a game to appear on the leaderboard.',
+          noGroups: 'No groups yet. Enter a group name when starting to play.',
+          tieNote: 'Ranking: highest score first, then the most time left. Each player is ranked by their best result.',
+          storageWarn: 'Browser storage is unavailable. Scores only last while this page stays open.',
+          exportCsv: '⬇ Download CSV',
+          newSession: '🗑 New Session',
+          confirmNew: 'Press again to delete all scores',
+          close: 'Close',
+          doneTitle: 'Well Done! Game Complete',
+          doneDesc: 'You arranged <b>{c} of {n} pillars</b> correctly. Try again for a full score!',
+          loseTitle: "Time's Up!",
+          loseDesc: 'Time has run out. Keep practising to master all {n} pillars of prayer!',
+          correctPillars: 'Correct Pillars',
+          retry: '↺ Try Again',
+          quiz: '🎯 Next Challenge',
+          downloadCert: '📥 Download Certificate',
+          certTitle: 'CERTIFICATE OF AWARD',
+          certAwarded: 'This certificate is proudly awarded to',
+          certReason: 'for successfully completing the challenge with a score of',
+          certDate: 'Date',
+        },
+      };
+
+      function t(key, vars = {}) {
+        const dict = I18N[currentLang] || I18N.ms;
+        const s = dict[key] !== undefined ? dict[key] : I18N.ms[key] !== undefined ? I18N.ms[key] : key;
+        return s.replace(/\{(\w+)\}/g, (m, k) => (vars[k] !== undefined ? vars[k] : m));
+      }
+
+      const CATEGORY_EN = {
+        'Rukun Qalbi': 'Heart Pillar (Qalbi)',
+        'Rukun Qauli': 'Verbal Pillar (Qauli)',
+        "Rukun Fi'li": "Physical Pillar (Fi'li)",
+        'Rukun Maknawi': 'Abstract Pillar (Maknawi)',
+      };
+
+      const POSTURE_EN = {
+        niat: { name: 'Intention (Niyyah)', desc: 'In the heart during Takbir', hints: ['Intend in the heart at the same moment as Takbiratul Ihram', 'Heart pillar: Purposely performing the prayer for Allah SWT', 'Saying "usolli" is sunnah; the intention in the heart is obligatory', 'Bring sincerity into your heart at the start of prayer'] },
+        qiyam: { name: 'Standing Upright (Qiyam)', desc: 'For those who are able', hints: ['Stand upright facing the qiblah if able', 'Physical pillar: Stand straight without leaning', 'The first physical position before bowing', 'Those who are unwell may pray sitting or lying down as able'] },
+        takbir: { name: 'Takbiratul Ihram', desc: 'Saying Allahu Akbar', hints: ['Say the great words "Allahu Akbar"', 'Verbal pillar: The takbir must be heard by your own ears', 'The gateway of prayer that forbids acts outside prayer', 'It is sunnah to raise the hands to ear or shoulder level'] },
+        fatihah: { name: 'Reciting Al-Fatihah', desc: 'Recite correctly & with tartil', hints: ['Recite the 7 verses of Al-Fatihah including the Basmalah', 'Verbal pillar: Keep proper pronunciation and tajwid', 'The opening surah that must be recited in every rakaat', 'Recited in order and continuously without long pauses'] },
+        ruku: { name: "Ruku' & Tamakninah", desc: 'Bowing & being still', hints: ['Bow with both palms holding the knees', 'Physical pillar: Back level and flat with tamakninah', 'Tamakninah: Be still at least as long as saying "Subhanallah"', 'Eyes look at the place of prostration with humility'] },
+        itidal: { name: "I'tidal & Tamakninah", desc: 'Rise upright & be still', hints: ["Rise to stand upright from ruku' with tamakninah", 'Physical pillar: Stand straight and be still for a moment', 'Say "Sami\'allahu liman hamidah" while rising', 'Be calm again before going down to prostrate'] },
+        sujud: { name: 'Prostrating Twice (Sujud)', desc: '7 body parts on floor & calm', hints: ['Place the 7 parts of prostration on the floor with tamakninah', 'Physical pillar: Must prostrate twice in every rakaat', 'The bare forehead touches the place of prostration humbly', 'The closest position of a servant to Allah SWT'] },
+        jalsa: { name: 'Sitting Between 2 Prostrations', desc: 'Iftirash sitting & be still', hints: ['Sit calmly in iftirash between the two prostrations', 'Physical pillar: Ask for forgiveness, mercy, guidance and provision', 'Sit upright with tamakninah before the second prostration', 'Place both hands on the thighs facing the qiblah'] },
+        duduk_tahiyyat: { name: 'Sitting for Final Tashahhud', desc: 'Tawarruk sitting at the end', hints: ['Sit in tawarruk in the final rakaat', 'Physical pillar: Seated on the floor with the left foot out to the right', 'The special sitting for the final tashahhud and salawat', 'The sitting position that marks the final rakaat'] },
+        baca_tahiyyat: { name: 'Reciting Final Tashahhud', desc: 'Saying the tahiyyat recitation', hints: ['Say "Attahiyyaatul mubaarakaatus salawaatut tayyibaatu lillah..."', 'Verbal pillar: The recitation must be heard by yourself', 'Words of greeting, testimony of tawhid and praise to Allah', 'The index finger is raised when saying "Illallah"'] },
+        selawat: { name: 'Salawat upon the Prophet', desc: 'In the final tashahhud', hints: ['Send salawat upon Prophet Muhammad ﷺ', 'Verbal pillar: At least "Allahumma solli \'ala Muhammad"', 'Said right after finishing the final tashahhud', 'A sign of love and obedience to the Messenger of Allah ﷺ'] },
+        salam: { name: 'Giving the First Salam', desc: 'Turning the face to the right', hints: ['Say the first salam towards the right', 'Verbal pillar: At least saying "Assalamu\'alaikum"', 'Marks the valid and complete end of the prayer', 'Turn the face right until the cheek is seen from behind'] },
+        tertib: { name: 'Order (Tertib)', desc: 'Performing pillars in sequence', hints: ['Perform all 13 pillars in the exact order', 'Abstract pillar: First things first, last things last', 'A condition for valid prayer from intention until salam', 'Place the Tertib card in the last position to close the sequence'] },
+      };
+
+      const STARTER_HINTS_EN = [
+        'Starter Tip: Prayer begins with Intention (Qalbi), Qiyam & Takbiratul Ihram.',
+        "Starter Tip: Physical pillars like Ruku', I'tidal and Sujud must be done with tamakninah.",
+        "Starter Tip: Remember the 3 pillar types — Qalbi (Heart), Qauli (Verbal), and Fi'li (Physical).",
+        'Starter Tip: Sitting between two prostrations (#8) comes before the final tashahhud sitting (#9).',
+        'Starter Tip: End of prayer: Tashahhud Sitting → Recite Tashahhud → Salawat → Salam → Tertib.',
+        'Starter Tip: Make sure Tertib is placed in the last slot (#13) to complete the sequence.',
+        'Starter Tip: Takbiratul Ihram marks the start of prayer and forbids acts outside prayer.',
+      ];
+      let audioCtx = null;
+      const audioBuffers = new Map();
+      // GAMBAR KARTUN (OFFLINE): disimpan dalam folder "imej-kartun" di sebelah fail game-kartun.html.
+      // Jika nama fail anda berbeza, ubah di sini sahaja.
+      //   susunan folder:   game-kartun.html
+      //                     imej-kartun/01_niat.webp ... 13_tertib.webp, latar.webp, maskot.webp
+      const LOCAL_ICON_DIR = 'imej-kartun/';
+      const LOCAL_ICON_FILES = {
+        niat_icon: '01_niat.webp',
+        qiyam_icon: '02_qiyam.webp',
+        takbir_icon: '03_takbir.webp',
+        fatihah_icon: '04_fatihah.webp',
+        ruku_icon: '05_ruku.webp',
+        itidal_icon: '06_itidal.webp',
+        sujud_icon: '07_sujud.webp',
+        jalsa_icon: '08_jalsa.webp',
+        duduk_tahiyyat_icon: '09_duduk_tahiyyat.webp',
+        baca_tahiyyat_icon: '10_baca_tahiyyat.webp',
+        selawat_icon: '11_selawat.webp',
+        salam_icon: '12_salam.webp',
+        tertib_icon: '13_tertib.webp',
+        kg_background: 'latar.webp',
+        kg_mascot: 'maskot.webp',
+      };
+      function getLocalIconUrl(id) {
+        return LOCAL_ICON_FILES[id] ? LOCAL_ICON_DIR + LOCAL_ICON_FILES[id] : '';
+      }
+
+      // Salinan dalam talian (Astrocade) - hanya digunakan jika fail dalam folder imej-kartun tiada.
+      const CACHED_ASSET_URLS = {
+        niat_icon: '',
+        qiyam_icon: '',
+        takbir_icon: '',
+        fatihah_icon: '',
+        ruku_icon: '',
+        itidal_icon: '',
+        sujud_icon: '',
+        jalsa_icon: '',
+        duduk_tahiyyat_icon: '',
+        baca_tahiyyat_icon: '',
+        selawat_icon: '',
+        salam_icon: '',
+        tertib_icon: '',
+        kg_background: '',
+        kg_mascot: '',
+      };
+
+      // Create or resume AudioContext
+      function getAudioContext() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        return audioCtx;
+      }
+
+      // Unlock AudioContext secara menyeluruh untuk semua peranti (iOS, Android, Desktop)
+      function unlockAudio() {
+        const ctx = getAudioContext();
+        if (ctx) {
+          if (ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+          }
+          try {
+            const buffer = ctx.createBuffer(1, 1, 22050);
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ctx.destination);
+            source.start(0);
+          } catch (e) {}
+        }
+      }
+
+      ['pointerdown', 'touchstart', 'mousedown', 'click'].forEach((evt) => {
+        window.addEventListener(evt, unlockAudio, { passive: true });
+      });
+
+      // Sandaran main audio melalui elemen HTML5 Audio
+      function playHtmlAudio(assetId, vol = 0.8) {
+        try {
+          const asset = getAssetInfo(assetId);
+          if (asset && asset.url) {
+            const audio = new Audio();
+            audio.src = asset.url;
+            audio.volume = Math.max(0, Math.min(1, vol));
+            const p = audio.play();
+            if (p && typeof p.catch === 'function') {
+              p.catch(() => {});
+            }
+          }
+        } catch (e) {}
+      }
+
+      // Cache asset URLs from host lib if available
+      function cacheAllAssetUrls() {
+        try {
+          if (window.lib && typeof window.lib.getAsset === 'function') {
+            const ids = [
+              'takbir_icon',
+              'qiyam_icon',
+              'ruku_icon',
+              'itidal_icon',
+              'sujud_icon',
+              'jalsa_icon',
+              'sujud2_icon',
+              'background_pattern',
+              'success_chime',
+              'error_buzz',
+              'victory_music',
+            ];
+            ids.forEach((id) => {
+              const a = window.lib.getAsset(id);
+              if (a && a.url) {
+                CACHED_ASSET_URLS[id] = a.url;
+              }
+            });
+          }
+        } catch (e) {}
+      }
+
+      // In Astrocade this retrieves an asset from the asset map.
+      // Outside Astrocade, it checks CACHED_ASSET_URLS before falling back.
+      function getAssetInfo(id) {
+        try {
+          if (window.lib && typeof window.lib.getAsset === 'function') {
+            const asset = window.lib.getAsset(id);
+            if (asset && asset.url) {
+              CACHED_ASSET_URLS[id] = asset.url;
+              return asset;
+            }
+          }
+        } catch (e) {}
+        if (CACHED_ASSET_URLS && CACHED_ASSET_URLS[id]) {
+          return { url: CACHED_ASSET_URLS[id] };
+        }
+        return null;
+      }
+      async function preloadAudioAssets(assetIds) {
+        for (const id of assetIds) {
+          if (audioBuffers.has(id)) continue;
+          const asset = getAssetInfo(id);
+          if (!asset || !asset.url) continue;
+          try {
+            const ctx = getAudioContext();
+            if (!ctx) continue;
+            const res = await fetch(asset.url);
+            const arrayBuf = await res.arrayBuffer();
+            const decoded = await ctx.decodeAudioData(arrayBuf);
+            audioBuffers.set(id, decoded);
+          } catch (e) {
+            // Synthesizer will gracefully back up audio playback
+          }
+        }
+      }
+
+      function playSfx(id) {
+        const config = window.gameConfig || {};
+        const vol = typeof config.sfxVolume === 'number' ? config.sfxVolume : 0.8;
+        if (vol <= 0) return;
+
+        if (id === 'success_chime' || id === 'error_buzz') {
+          playHtmlAudio(id, vol);
+        }
+
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            executePlaySfx(ctx, id);
+          }).catch(() => {});
+        } else {
+          executePlaySfx(ctx, id);
+        }
+      }
+
+      function executePlaySfx(ctx, id) {
+        const config = window.gameConfig || {};
+        const vol = typeof config.sfxVolume === 'number' ? config.sfxVolume : 0.8;
+        if (vol <= 0) return;
+
+        if (audioBuffers.has(id)) {
+          try {
+            const source = ctx.createBufferSource();
+            const gain = ctx.createGain();
+            gain.gain.value = vol;
+            source.buffer = audioBuffers.get(id);
+            source.connect(gain);
+            gain.connect(ctx.destination);
+            source.start(0);
+            return;
+          } catch (e) {}
+        }
+
+        // Synthesized sound effects fallback
+        try {
+          const now = ctx.currentTime;
+          const masterGain = ctx.createGain();
+          masterGain.gain.value = vol;
+          masterGain.connect(ctx.destination);
+
+          if (id === 'card_snap') {
+            // Gentle tactile snap click
+            const osc = ctx.createOscillator();
+            const noteGain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(540, now);
+            osc.frequency.exponentialRampToValueAtTime(280, now + 0.04);
+            noteGain.gain.setValueAtTime(0.2, now);
+            noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            osc.connect(noteGain);
+            noteGain.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + 0.06);
+          } else if (id === 'success_chime') {
+            // Gentle Middle-Eastern bell / chime arpeggio
+            const notes = [659.25, 830.61, 987.77, 1318.51];
+            notes.forEach((freq, idx) => {
+              const osc = ctx.createOscillator();
+              const noteGain = ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+              noteGain.gain.setValueAtTime(0.001, now + idx * 0.08);
+              noteGain.gain.exponentialRampToValueAtTime(0.26, now + idx * 0.08 + 0.03);
+              noteGain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.65);
+              osc.connect(noteGain);
+              noteGain.connect(masterGain);
+              osc.start(now + idx * 0.08);
+              osc.stop(now + idx * 0.08 + 0.7);
+            });
+          } else if (id === 'error_buzz') {
+            // Gentle, non-harsh low tone
+            [0, 0.13].forEach((offset) => {
+              const osc = ctx.createOscillator();
+              const noteGain = ctx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(220, now + offset);
+              noteGain.gain.setValueAtTime(0.001, now + offset);
+              noteGain.gain.linearRampToValueAtTime(0.25, now + offset + 0.02);
+              noteGain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.18);
+              osc.connect(noteGain);
+              noteGain.connect(masterGain);
+              osc.start(now + offset);
+              osc.stop(now + offset + 0.2);
+            });
+          }
+        } catch (e) {}
+      }
+
+      // Bunyi khusus apabila pemasa tamat (Timeout Sound)
+      // Bip amaran setiap saat untuk 20 saat terakhir (satu bip pendek, tanpa fail luar)
+      function playWarningBeep() {
+        const config = window.gameConfig || {};
+        const vol = typeof config.sfxVolume === 'number' ? config.sfxVolume : 0.8;
+        if (vol <= 0) return;
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const play = () => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.value = 880;
+          gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, 0.25 * vol), ctx.currentTime + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.14);
+        };
+        if (ctx.state === 'suspended') ctx.resume().then(play).catch(() => {});
+        else play();
+      }
+
+      function playTimeoutSound() {
+        const config = window.gameConfig || {};
+        const vol = typeof config.sfxVolume === 'number' ? config.sfxVolume : 0.85;
+        if (vol <= 0) return;
+
+        // 1. Cuba mainkan melalui elemen HTML5 Audio
+        playHtmlAudio('error_buzz', vol);
+
+        // 2. Mainkan melalui Web Audio API
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            executePlayTimeoutSound(ctx, vol);
+          }).catch(() => {
+            executePlayTimeoutSound(ctx, vol);
+          });
+        } else {
+          executePlayTimeoutSound(ctx, vol);
+        }
+      }
+
+      function executePlayTimeoutSound(ctx, vol) {
+        if (typeof vol !== 'number') {
+          const config = window.gameConfig || {};
+          vol = typeof config.sfxVolume === 'number' ? config.sfxVolume : 0.85;
+        }
+        if (vol <= 0) return;
+
+        // Cuba mainkan error_buzz jika sedia ada
+        if (audioBuffers.has('error_buzz')) {
+          try {
+            const source = ctx.createBufferSource();
+            const gain = ctx.createGain();
+            gain.gain.value = vol;
+            source.buffer = audioBuffers.get('error_buzz');
+            source.connect(gain);
+            gain.connect(ctx.destination);
+            source.start(0);
+          } catch (e) {}
+        }
+
+        // Bunyi penggera amaran tamat masa yang nyaring & jelas (3 nada menurun dengan gelombang sawtooth)
+        try {
+          const now = ctx.currentTime;
+          const masterGain = ctx.createGain();
+          masterGain.gain.value = vol;
+          masterGain.connect(ctx.destination);
+
+          const notes = [
+            { f: 520, start: 0.0, dur: 0.28 },
+            { f: 415, start: 0.30, dur: 0.28 },
+            { f: 310, start: 0.60, dur: 0.70 },
+          ];
+
+          notes.forEach((item) => {
+            const osc = ctx.createOscillator();
+            const oscHarmonic = ctx.createOscillator();
+            const noteGain = ctx.createGain();
+
+            osc.type = 'sawtooth';
+            oscHarmonic.type = 'sine';
+            osc.frequency.setValueAtTime(item.f, now + item.start);
+            oscHarmonic.frequency.setValueAtTime(item.f * 2, now + item.start);
+
+            noteGain.gain.setValueAtTime(0.001, now + item.start);
+            noteGain.gain.linearRampToValueAtTime(0.35, now + item.start + 0.02);
+            noteGain.gain.exponentialRampToValueAtTime(0.0001, now + item.start + item.dur);
+
+            osc.connect(noteGain);
+            oscHarmonic.connect(noteGain);
+            noteGain.connect(masterGain);
+
+            osc.start(now + item.start);
+            oscHarmonic.start(now + item.start);
+            osc.stop(now + item.start + item.dur + 0.05);
+            oscHarmonic.stop(now + item.start + item.dur + 0.05);
+          });
+        } catch (e) {}
+      }
+
+      function playMusic(id) {
+        const config = window.gameConfig || {};
+        const vol = typeof config.musicVolume === 'number' ? config.musicVolume : 0.7;
+        if (vol <= 0) return;
+
+        playHtmlAudio(id, vol);
+
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            executePlayMusic(ctx, id);
+          }).catch(() => {});
+        } else {
+          executePlayMusic(ctx, id);
+        }
+      }
+
+      function executePlayMusic(ctx, id) {
+        const config = window.gameConfig || {};
+        const vol = typeof config.musicVolume === 'number' ? config.musicVolume : 0.7;
+        if (vol <= 0) return;
+
+        if (audioBuffers.has(id)) {
+          try {
+            const source = ctx.createBufferSource();
+            const gain = ctx.createGain();
+            gain.gain.value = vol;
+            source.buffer = audioBuffers.get(id);
+            source.connect(gain);
+            gain.connect(ctx.destination);
+            source.start(0);
+            return;
+          } catch (e) {}
+        }
+
+        // Synthesized victory jingle fallback
+        try {
+          const now = ctx.currentTime;
+          const masterGain = ctx.createGain();
+          masterGain.gain.value = vol;
+          masterGain.connect(ctx.destination);
+
+          const melody = [
+            { f: 440.0, t: 0.0, d: 0.22 },
+            { f: 523.25, t: 0.2, d: 0.22 },
+            { f: 587.33, t: 0.4, d: 0.22 },
+            { f: 659.25, t: 0.62, d: 0.32 },
+            { f: 783.99, t: 0.95, d: 0.35 },
+            { f: 880.0, t: 1.3, d: 1.1 },
+          ];
+
+          melody.forEach((item) => {
+            const osc = ctx.createOscillator();
+            const noteGain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(item.f, now + item.t);
+            noteGain.gain.setValueAtTime(0.001, now + item.t);
+            noteGain.gain.linearRampToValueAtTime(0.28, now + item.t + 0.04);
+            noteGain.gain.exponentialRampToValueAtTime(0.0001, now + item.t + item.d);
+            osc.connect(noteGain);
+            noteGain.connect(masterGain);
+            osc.start(now + item.t);
+            osc.stop(now + item.t + item.d + 0.05);
+          });
+        } catch (e) {}
+      }
+
+      function clearVictoryParticles() {
+        const canvas = document.getElementById('victory-particles-canvas');
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+          canvas.remove();
+        }
+      }
+
+      function triggerVictoryParticles() {
+        clearVictoryParticles();
+        const canvas = document.createElement('canvas');
+        canvas.id = 'victory-particles-canvas';
+        document.body.appendChild(canvas);
+
+        const w = (canvas.width = window.innerWidth);
+        const h = (canvas.height = window.innerHeight);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const colors = [
+          '#D4AF37',
+          '#2D9596',
+          '#2E7D32',
+          '#FFA000',
+          '#FFFFFF',
+          '#69F0AE',
+          '#9B7EBD',
+        ];
+        const particles = [];
+        const count = 90;
+
+        for (let i = 0; i < count; i++) {
+          particles.push({
+            x: w / 2 + (Math.random() - 0.5) * 160,
+            y: h * 0.42 + (Math.random() - 0.5) * 100,
+            vx: (Math.random() - 0.5) * 16,
+            vy: -Math.random() * 14 - 5,
+            gravity: 0.28,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            size: Math.random() * 8 + 4,
+            shape: Math.random() > 0.45 ? 'star' : Math.random() > 0.5 ? 'rect' : 'circle',
+            rot: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.22,
+            alpha: 1,
+            decay: Math.random() * 0.007 + 0.005,
+          });
+        }
+
+        function drawStar(c, cx, cy, spikes, outerRadius, innerRadius) {
+          let rot = (Math.PI / 2) * 3;
+          let x = cx;
+          let y = cy;
+          const step = Math.PI / spikes;
+
+          c.beginPath();
+          c.moveTo(cx, cy - outerRadius);
+          for (let i = 0; i < spikes; i++) {
+            x = cx + Math.cos(rot) * outerRadius;
+            y = cy + Math.sin(rot) * outerRadius;
+            c.lineTo(x, y);
+            rot += step;
+
+            x = cx + Math.cos(rot) * innerRadius;
+            y = cy + Math.sin(rot) * innerRadius;
+            c.lineTo(x, y);
+            rot += step;
+          }
+          c.lineTo(cx, cy - outerRadius);
+          c.closePath();
+          c.fill();
+        }
+
+        function renderFrame() {
+          if (!document.getElementById('victory-particles-canvas')) return;
+          ctx.clearRect(0, 0, w, h);
+          let alive = 0;
+          for (const p of particles) {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.vx *= 0.985;
+            p.rot += p.rotSpeed;
+            p.alpha -= p.decay;
+
+            if (p.alpha > 0) {
+              alive++;
+              ctx.save();
+              ctx.globalAlpha = Math.max(0, p.alpha);
+              ctx.fillStyle = p.color;
+              ctx.translate(p.x, p.y);
+              ctx.rotate(p.rot);
+
+              if (p.shape === 'star') {
+                drawStar(ctx, 0, 0, 5, p.size, p.size * 0.48);
+              } else if (p.shape === 'rect') {
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size * 1.6, p.size * 0.9);
+              } else {
+                ctx.beginPath();
+                ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+              }
+              ctx.restore();
+            }
+          }
+          if (alive > 0) {
+            requestAnimationFrame(renderFrame);
+          } else {
+            clearVictoryParticles();
+          }
+        }
+        requestAnimationFrame(renderFrame);
+      }
+
+      async function run(mode) {
+        const gameWorld = document.getElementById('game-world');
+        gameWorld.innerHTML = '';
+
+        if (activeTimerInterval) {
+          clearInterval(activeTimerInterval);
+          activeTimerInterval = null;
+        }
+        if (activeHintTimeout) {
+          clearTimeout(activeHintTimeout);
+          activeHintTimeout = null;
+        }
+
+        const config = window.gameConfig || {};
+
+        // Latar belakang kartun (landskap masjid)
+        applyKgBackground(gameWorld);
+
+        cacheAllAssetUrls();
+
+        // Definisi 13 Rukun Solat mengikut silibus standard (Mazhab Syafi'i)
+        // Setiap rukun mempunyai vektor SVG berkualiti tinggi yang sepadan dengan ikon siluet
+        const ALL_POSTURES = [
+          {
+            id: 'niat',
+            num: 1,
+            name: 'Niat',
+            arabic: 'النية',
+            desc: 'Dalam hati semasa Takbir',
+            category: 'Rukun Qalbi',
+            assetId: 'niat_icon',
+            color: '#2D9596',
+            hints: [
+              'Niat di dalam hati serentak dengan Takbiratul Ihram',
+              'Rukun Qalbi: Menyengajakan solat kerana Allah SWT',
+              'Lafaz usholli sunat, lintasan niat di dalam hati yang wajib',
+              'Menghadirkan rasa keikhlasan di permulaan solat',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><path d="M24 35s-9-6-9-12.5a5.5 5.5 0 0 1 9.5-3.8 5.5 5.5 0 0 1 9.5 3.8C34 29 24 35 24 35z" fill="#2D9596"/><path d="M24 20c-1.8 0-3 1.2-3 3s1.2 3 3 3c.6 0 1.2-.2 1.6-.5-.3.2-.7.3-1.1.3-1.3 0-2.3-1-2.3-2.3 0-1 .7-1.8 1.6-2.2-.3-.2-.5-.3-.8-.3z" fill="#D4AF37"/><polygon points="26,19 26.5,20.2 27.8,20.4 26.8,21.3 27.1,22.6 26,21.9 24.9,22.6 25.2,21.3 24.2,20.4 25.5,20.2" fill="#D4AF37"/></svg>`,
+          },
+          {
+            id: 'qiyam',
+            num: 2,
+            name: 'Berdiri Tegak (Qiyam)',
+            arabic: 'القيام',
+            desc: 'Bagi yang berkemampuan',
+            category: "Rukun Fi'li",
+            assetId: 'qiyam_icon',
+            color: '#2D9596',
+            hints: [
+              'Berdiri tegak menghadap kiblat bagi yang mampu',
+              "Rukun Fi'li: Berdiri lurus tanpa bersandar",
+              'Kedudukan fizikal paling awal sebelum rukuk',
+              'Bagi yang uzur, boleh solat duduk atau baring mengikut kemampuan',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><path d="M21 7.5c-2.8 0-4.5 1.8-4.5 4.5 0 1.5.8 2.8 2 3.6v1.2c0 .4.3.7.7.7h3.6c.4 0 .7-.3.7-.7v-1.1c1.8-.6 3-2.2 3-4.2 0-2.7-1.8-4-5.5-4z" fill="#2D9596"/><path d="M26 13.5c.6.4 1 .8 1.4 1.4-.3.4-.8.6-1.4.6v1c1.5 0 2.5-1 2.5-2.2 0-1.1-.9-2-2.5-2v1.2z" fill="#2D9596"/><path d="M19 17.5h6.5c1.8 0 3.2 1.2 3.8 2.8l2 6.5c.3 1-.3 2-1.3 2.3-.9.3-1.9-.3-2.2-1.2l-1.3-4.4h-3v14.5h2.5c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5H18c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5h2.5V17.5z" fill="#2D9596"/><path d="M23 20h4.5c.8 0 1.5.7 1.5 1.5v1c0 .8-.7 1.5-1.5 1.5H23c-.8 0-1.5-.7-1.5-1.5v-1c0-.8.7-1.5 1.5-1.5z" fill="#1F6B6C"/><line x1="22.5" y1="21.5" x2="28" y2="21.5" stroke="#D4AF37" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+          },
+          {
+            id: 'takbir',
+            num: 3,
+            name: 'Takbiratul Ihram',
+            arabic: 'تكبيرة الإحرام',
+            desc: 'Melafazkan Allahu Akbar',
+            category: 'Rukun Qauli',
+            assetId: 'takbir_icon',
+            color: '#2D9596',
+            hints: [
+              'Melafazkan ucapan agung "Allahu Akbar"',
+              'Rukun Qauli: Sebutan takbir wajib didengari telinga sendiri',
+              'Pintu masuk solat yang mengharamkan perkara di luar solat',
+              'Sunat mengangkat tangan paras telinga atau bahu semasa melafazkannya',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><path d="M24 7.5c-3 0-5 2-5 5 0 2 1.3 3.7 3.2 4.4v1.1h3.6v-1.1c2-.7 3.2-2.4 3.2-4.4 0-3-2-5-5-5z" fill="#2D9596"/><path d="M15 11c0-1.5.9-2.5 2-2.5s2 1 2 2.5v4.5c0 .6-.4 1-1 1s-1-.4-1-1v-2h-1v2c0 1.5-1 2.5-2 2.5s-2-1-2-2.5V11c0-1.5 1-2.5 2-2.5s2 1 2 2.5" fill="#2D9596"/><path d="M33 11c0-1.5-.9-2.5-2-2.5s-2 1-2 2.5v4.5c0 .6.4 1 1 1s1-.4 1-1v-2h1v2c0 1.5 1 2.5 2 2.5s2-1 2-2.5V11c0-1.5-1-2.5-2-2.5s-2 1-2 2.5" fill="#2D9596"/><path d="M20 18h8c1.5 0 2.5 1 2.5 2.5v17.5h2c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5H15.5c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5h2V20.5c0-1.5 1-2.5 2.5-2.5z" fill="#2D9596"/><line x1="24" y1="18.5" x2="24" y2="38" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 3"/></svg>`,
+          },
+          {
+            id: 'fatihah',
+            num: 4,
+            name: 'Membaca Al-Fatihah',
+            arabic: 'قراءة الفاتحة',
+            desc: 'Membaca dengan betul & tartil',
+            category: 'Rukun Qauli',
+            assetId: 'fatihah_icon',
+            color: '#2D9596',
+            hints: [
+              'Membaca 7 ayat Al-Fatihah berserta bacaan Basmalah',
+              'Rukun Qauli: Memelihara makhraj huruf dan hukum tajwid',
+              'Surah pembuka yang wajib dibaca pada setiap rakaat',
+              'Dibaca secara tertib dan bersambung tanpa berhenti terlalu lama',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><path d="M15 35l9-9 9 9M18 36l6-6 6 6" stroke="#A8861B" stroke-width="2.2" stroke-linecap="round"/><path d="M11 17c4-2 9-1 13 2.5 4-3.5 9-4.5 13-2.5v13.5c-4-2-9-1-13 2.5-4-3.5-9-4.5-13-2.5V17z" fill="#2D9596" stroke="#1F6B6C" stroke-width="1.2"/><path d="M13 18.5c3.5-1.5 7.5-.7 11 2v10.5c-3.5-2.5-7.5-3.2-11-1.7V18.5z" fill="#FFFFFF"/><path d="M35 18.5c-3.5-1.5-7.5-.7-11 2v10.5c3.5-2.5 7.5-3.2 11-1.7V18.5z" fill="#FFFFFF"/><line x1="15" y1="21" x2="21" y2="21" stroke="#2D9596" stroke-width="1.2" stroke-linecap="round"/><line x1="15" y1="24" x2="22" y2="24" stroke="#2D9596" stroke-width="1.2" stroke-linecap="round"/><line x1="15" y1="27" x2="20" y2="27" stroke="#2D9596" stroke-width="1.2" stroke-linecap="round"/><line x1="27" y1="21" x2="33" y2="21" stroke="#2D9596" stroke-width="1.2" stroke-linecap="round"/><line x1="26" y1="24" x2="33" y2="24" stroke="#2D9596" stroke-width="1.2" stroke-linecap="round"/><line x1="28" y1="27" x2="33" y2="27" stroke="#2D9596" stroke-width="1.2" stroke-linecap="round"/><path d="M24 16v13l2-2 2 2V16" fill="#D4AF37"/></svg>`,
+          },
+          {
+            id: 'ruku',
+            num: 5,
+            name: "Ruku' & Tamakninah",
+            arabic: 'الركوع',
+            desc: 'Membongkok & bertenang',
+            category: "Rukun Fi'li",
+            assetId: 'ruku_icon',
+            color: '#2D9596',
+            hints: [
+              'Membongkok dengan dua telapak tangan memegang lutut',
+              "Rukun Fi'li: Belakang mendatar rata berserta tamakninah",
+              'Tamakninah: Diam bertenang sekurang-kurangnya kadar "Subhanallah"',
+              'Mata memandang ke tempat sujud dengan tawaduk',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><circle cx="36" cy="22" r="4.2" fill="#2D9596"/><path d="M15 25c0-3 2-5 5-5h14c1.5 0 2.5.8 3 2l1.2 3.5c-1 .6-2.5.4-3.5-.5L33 23H20c-1.5 0-2.5.8-3 2v13h-4V25z" fill="#2D9596"/><path d="M31 23l-7 9c-.5.7-1.4.9-2.1.5s-.9-1.4-.5-2.1l6.5-8.4" fill="#1F6B6C"/><path d="M19 25v13h4V25h-4z" fill="#2D9596"/><circle cx="22" cy="32" r="2.2" fill="#D4AF37"/><rect x="14" y="38" width="12" height="2.5" rx="1" fill="#2D9596"/></svg>`,
+          },
+          {
+            id: 'itidal',
+            num: 6,
+            name: "I'tidal & Tamakninah",
+            arabic: 'الاعتدال',
+            desc: 'Bangkit tegak & bertenang',
+            category: "Rukun Fi'li",
+            assetId: 'itidal_icon',
+            color: '#2D9596',
+            hints: [
+              "Bangkit berdiri tegak dari ruku' berserta tamakninah",
+              "Rukun Fi'li: Berdiri lurus dan bertenang sejenak",
+              'Mengucapkan "Sami\'allahu liman hamidah" ketika bangkit',
+              'Kembali tenang sebelum bersiap turun ke lantai untuk sujud',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><circle cx="24" cy="11" r="4.5" fill="#2D9596"/><path d="M19 17.5h10c1.2 0 2.2 1 2.2 2.2v17.5c0 .8-.7 1.5-1.5 1.5h-11c-.8 0-1.5-.7-1.5-1.5V19.7c0-1.2 1-2.2 2.2-2.2z" fill="#2D9596"/><path d="M17 19v11c0 .8-.7 1.5-1.5 1.5S14 30.8 14 30V19c0-.8.7-1.5 1.5-1.5S17 18.2 17 19z" fill="#1F6B6C"/><path d="M34 19v11c0 .8-.7 1.5-1.5 1.5s-1.5-.7-1.5-1.5V19c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5z" fill="#1F6B6C"/><rect x="18" y="38.5" width="12" height="2.5" rx="1.2" fill="#2D9596"/><line x1="24" y1="18.5" x2="24" y2="37" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 3"/></svg>`,
+          },
+          {
+            id: 'sujud',
+            num: 7,
+            name: 'Sujud Dua Kali',
+            arabic: 'السجود',
+            desc: '7 anggota ke lantai & tenang',
+            category: "Rukun Fi'li",
+            assetId: 'sujud_icon',
+            color: '#2D9596',
+            hints: [
+              'Menempelkan 7 anggota sujud ke lantai dengan tamakninah',
+              "Rukun Fi'li: Wajib sujud dua kali dalam setiap satu rakaat",
+              'Dahi terbuka menyentuh tempat sujud dengan penuh rasa rendah diri',
+              'Kedudukan paling dekat seorang hamba dengan Allah SWT',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><line x1="6" y1="38" x2="42" y2="38" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round"/><circle cx="36" cy="34" r="3.8" fill="#2D9596"/><rect x="31" y="35" width="4.5" height="2.5" rx="1" fill="#1F6B6C"/><path d="M13 36c0-1 1-2 2-2l8-10c2-2.5 5.5-3 8-1l6 6c.6.6.4 1.6-.4 2-.8.4-1.8.1-2.2-.6l-4.5-4.5c-1-.8-2.5-.5-3.2.5L20 34c-.5.8-1.4 1.2-2.3 1.2h-3c-.9 0-1.7-.7-1.7-1.6v2.4z" fill="#2D9596"/><circle cx="21" cy="36" r="2.2" fill="#1F6B6C"/><circle cx="12" cy="36" r="2" fill="#D4AF37"/></svg>`,
+          },
+          {
+            id: 'jalsa',
+            num: 8,
+            name: 'Duduk Antara 2 Sujud',
+            arabic: 'الجلوس بين السجدتين',
+            desc: 'Duduk iftirasy & bertenang',
+            category: "Rukun Fi'li",
+            assetId: 'jalsa_icon',
+            color: '#2D9596',
+            hints: [
+              'Duduk iftirasy dengan tenang di antara dua sujud',
+              "Rukun Fi'li: Memohon keampunan, rahmat, hidayah dan rezeki",
+              'Duduk tegak bertamakninah sebelum turun sujud kali kedua',
+              'Meletakkan dua tangan di atas peha menghadap kiblat',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><line x1="8" y1="38" x2="40" y2="38" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round"/><circle cx="21" cy="12" r="4.5" fill="#2D9596"/><path d="M19 18h6c1.5 0 2.5 1 2.5 2.5v11c0 2-1.5 3.5-3.5 3.5h-5c-2 0-3.5-1.5-3.5-3.5v-11c0-1.5 1-2.5 2.5-2.5z" fill="#2D9596"/><path d="M15 31h16c1.2 0 2 .8 2 2s-.8 2-2 2H13c-2 0-3.5-1.5-3.5-3.5 0-1 .8-1.8 1.8-1.8h3.7z" fill="#2D9596"/><path d="M22 21l6 8c.4.5 1 .7 1.6.4.6-.3.9-1 .6-1.6l-5.4-7.5" fill="#1F6B6C"/><circle cx="31" cy="32" r="2.2" fill="#D4AF37"/></svg>`,
+          },
+          {
+            id: 'duduk_tahiyyat',
+            num: 9,
+            name: 'Duduk Tahiyyat Akhir',
+            arabic: 'جلوس التشهد الأخير',
+            desc: 'Duduk tawarruk di akhir solat',
+            category: "Rukun Fi'li",
+            assetId: 'duduk_tahiyyat_icon',
+            color: '#2D9596',
+            hints: [
+              'Duduk tawarruk pada rakaat terakhir solat',
+              "Rukun Fi'li: Punggung beralaskan lantai dan kaki kiri dikeluarkan ke kanan",
+              'Duduk khusus untuk bacaan tahiyyat akhir dan selawat penutup',
+              'Posisi duduk yang membezakan rakaat terakhir daripada rakaat awal',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><line x1="8" y1="38" x2="40" y2="38" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round"/><circle cx="21" cy="12" r="4.5" fill="#2D9596"/><path d="M19 18h6c1.5 0 2.5 1 2.5 2.5v11c0 2-1.5 3.5-3.5 3.5h-5c-2 0-3.5-1.5-3.5-3.5v-11c0-1.5 1-2.5 2.5-2.5z" fill="#2D9596"/><path d="M15 31h16c1.2 0 2 .8 2 2s-.8 2-2 2H13c-2 0-3.5-1.5-3.5-3.5 0-1 .8-1.8 1.8-1.8h3.7z" fill="#2D9596"/><path d="M22 21l7 7h5c.8 0 1.5-.7 1.5-1.5s-.7-1.5-1.5-1.5h-3.8l-5.6-5.8" fill="#1F6B6C"/><path d="M35 26.5l3-1.5M36 29.5l3 1.5" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round"/><circle cx="35" cy="26.5" r="1.5" fill="#D4AF37"/></svg>`,
+          },
+          {
+            id: 'baca_tahiyyat',
+            num: 10,
+            name: 'Membaca Tahiyyat Akhir',
+            arabic: 'قراءة التشهد الأخير',
+            desc: 'Melafazkan bacaan tahiyyat',
+            category: 'Rukun Qauli',
+            assetId: 'baca_tahiyyat_icon',
+            color: '#2D9596',
+            hints: [
+              'Melafazkan "Attahiyyaatul mubaarakaatus salawaatut tayyibaatu lillah..."',
+              'Rukun Qauli: Sebutan bacaan wajib didengari oleh diri sendiri',
+              'Ucapan penghormatan, kesaksian tauhid dan pujian kepada Allah',
+              'Isyarat jari telunjuk diangkat ketika lafaz "Illallah"',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><path d="M17 33c1.5-5 5-8 10-8h4v-7c0-1.2 1-2 2-2s2 .8 2 2v10h-2c-3.5 0-5.5 2-7.5 6.5h-8.5z" fill="#2D9596"/><circle cx="21" cy="18" r="3.5" fill="#2D9596"/><rect x="29" y="27" width="6" height="4" rx="2" fill="#1F6B6C"/><rect x="29" y="32" width="6" height="4" rx="2" fill="#1F6B6C"/><line x1="33" y1="13" x2="33" y2="10" stroke="#D4AF37" stroke-width="2" stroke-linecap="round"/><line x1="36" y1="14" x2="39" y2="12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round"/><line x1="30" y1="14" x2="27" y2="12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round"/></svg>`,
+          },
+          {
+            id: 'selawat',
+            num: 11,
+            name: 'Selawat ke atas Nabi',
+            arabic: 'الصلاة على النبي ﷺ',
+            desc: 'Dalam tahiyyat akhir',
+            category: 'Rukun Qauli',
+            assetId: 'selawat_icon',
+            color: '#2D9596',
+            hints: [
+              'Melafazkan selawat ke atas Nabi Muhammad ﷺ',
+              'Rukun Qauli: Sekurang-kurangnya "Allahumma solli \'ala Muhammad"',
+              'Dilafazkan serta-merta selepas selesai membaca tahiyyat akhir',
+              'Tanda cinta dan ketaatan kepada junjungan besar Rasulullah ﷺ',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><path d="M24 10l3.5 5 6-1-1 6 5 3.5-5 3.5 1 6-6-1L24 37l-3.5-5-6 1 1-6-5-3.5 5-3.5-1-6 6 1L24 10z" fill="#E0F2F1" stroke="#D4AF37" stroke-width="1.4"/><path d="M24 14c-4.5 4-6.5 8-6.5 12.5h13c0-4.5-2-8.5-6.5-12.5z" fill="#2D9596"/><path d="M24 11v3" stroke="#D4AF37" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="10" r="1.5" fill="#D4AF37"/><rect x="16" y="27" width="16" height="5" rx="1" fill="#1F6B6C"/><path d="M22 32v-3a2 2 0 0 1 4 0v3" fill="#D4AF37"/></svg>`,
+          },
+          {
+            id: 'salam',
+            num: 12,
+            name: 'Memberi Salam Pertama',
+            arabic: 'التسليمة الأولى',
+            desc: 'Memalingkan muka ke kanan',
+            category: 'Rukun Qauli',
+            assetId: 'salam_icon',
+            color: '#2D9596',
+            hints: [
+              'Melafazkan ucapan salam pertama ke arah kanan',
+              'Rukun Qauli: Sekurang-kurangnya ucapan "Assalamu\'alaikum"',
+              'Tanda berakhirnya ibadah solat secara sah dan sempurna',
+              'Muka dipusingkan ke kanan sehingga pipi kelihatan dari belakang',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><circle cx="22" cy="16" r="4.8" fill="#2D9596"/><path d="M25 15c.8.5 1.5 1.2 1.8 2-.6.5-1.2.7-1.8.7v-2.7z" fill="#1F6B6C"/><path d="M13 34c0-5.5 4.5-9.5 9.5-9.5 3 0 5.5 1.2 7 3.2l4-2.2 1.5 4-4.5 2.5c.8 1.4 1 2 1 3v2H13z" fill="#2D9596"/><path d="M31 15c2-1 4-1 6 0M32 19c2.5-1 4.5-1 7 0M33 23c2-1 4-1 6 0" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+          },
+          {
+            id: 'tertib',
+            num: 13,
+            name: 'Tertib (Ikut Urutan)',
+            arabic: 'الترتيب',
+            desc: 'Melakukan rukun berturutan',
+            category: 'Rukun Maknawi',
+            assetId: 'tertib_icon',
+            color: '#2D9596',
+            hints: [
+              'Melakukan kesemua 13 rukun mengikut turutan yang tepat',
+              'Rukun Maknawi: Mendahulukan yang awal dan mengemudiankan yang akhir',
+              'Syarat sah solat dari permulaan niat sehinggalah salam',
+              'Letakkan kad Tertib di kedudukan terakhir sebagai penutup susunan',
+            ],
+            svg: `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="#E6F4F1" stroke="#2D9596" stroke-width="1.2"/><rect x="14" y="13" width="20" height="5" rx="2" fill="#2D9596"/><circle cx="10" cy="15.5" r="2.2" fill="#D4AF37"/><rect x="14" y="21" width="20" height="5" rx="2" fill="#2D9596"/><circle cx="10" cy="23.5" r="2.2" fill="#D4AF37"/><rect x="14" y="29" width="20" height="5" rx="2" fill="#2D9596"/><circle cx="10" cy="31.5" r="2.2" fill="#D4AF37"/><circle cx="34" cy="24" r="8" fill="#D4AF37" stroke="#FFFFFF" stroke-width="1.5"/><path d="M31 24l2 2 4.5-4.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+          },
+        ];
+
+        // Pelbagai variasi pembayang permulaan untuk pusingan baharu
+        const STARTER_HINTS = [
+          'Petua Permulaan: Solat dimulakan dengan Niat (Qalbi), Qiyam & Takbiratul Ihram.',
+          "Petua Permulaan: Rukun Fi'li seperti Ruku', I'tidal dan Sujud wajib disertai tamakninah.",
+          "Petua Permulaan: Ingat 3 kategori rukun — Qalbi (Hati), Qauli (Bacaan), dan Fi'li (Perbuatan).",
+          'Petua Permulaan: Duduk antara dua sujud (#8) hadir sebelum duduk tahiyyat akhir (#9).',
+          'Petua Permulaan: Urutan akhir solat: Duduk Tahiyyat → Baca Tahiyyat → Selawat → Salam → Tertib.',
+          'Petua Permulaan: Pastikan Tertib diletakkan di slot terakhir (#13) sebagai penyempurna turutan solat.',
+          'Petua Permulaan: Takbiratul Ihram menandakan bermulanya solat dan pengharaman perbuatan luar solat.',
+        ];
+
+        // Number of postures configured (default 13)
+        const numPostures = Math.min(Math.max(config.numPostures || 13, 3), ALL_POSTURES.length);
+        const postures = ALL_POSTURES.slice(0, numPostures);
+        const CORRECT_SEQUENCE = postures.map((p) => p.id);
+
+        // Timer duration: default 120s (2 minutes), editable 20-120s
+        const totalDuration = Math.min(
+          Math.max(config.timerDuration !== undefined ? config.timerDuration : 90, 20),
+          120
+        );
+        const showHints = config.showHints !== false;
+
+        // Runtime state
+        let slots = new Array(numPostures).fill(null);
+        let trayItems = [];
+        let slotFeedback = new Array(numPostures).fill(null);
+        let recentSnappedIndex = null;
+        let dragState = null;
+        let lastCheckResult = null; // null or { total, placed, correct, results: [bool, ...] }
+        let quickHint = null; // { index, text, tag } while the brief clue is visible
+        let activeHintsMap = {}; // Indeks variasi pembayang setiap rukun bagi pusingan ini
+        let currentStarterHint = null; // Indeks pembayang permulaan pusingan ini
+        let gameState = 'ready'; // 'ready' | 'playing' | 'victory' | 'gameover'
+        let timeLeft = totalDuration;
+        let selectedPostureId = null;
+        let selectedSource = null; // 'tray' | 'slot'
+        let selectedSlotIndex = null;
+        let lastTouchTapTime = 0;
+
+        function isNonComputerDevice() {
+          const ua = navigator.userAgent || '';
+          const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(ua);
+          const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+          return isMobileUA || (hasTouch && window.innerWidth <= 1024);
+        }
+
+        // Pada telefon/tablet, bar tindakan berada di bawah senarai kad. Selepas
+        // pengguna meminta pembayang atau menyemak jawapan, bawa notifikasi di
+        // bahagian atas kembali ke pandangan tanpa mengubah kedudukan desktop.
+        function revealTopNotificationOnPhone() {
+          if (!isNonComputerDevice()) return;
+
+          requestAnimationFrame(() => {
+            try {
+              gameWorld.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (e) {
+              // Sandaran untuk pelayar mudah alih/WebView lama.
+              gameWorld.scrollTop = 0;
+            }
+          });
+        }
+
+        preloadAudioAssets(['success_chime', 'error_buzz', 'victory_music']);
+
+        function getPosture(id) {
+          const base = ALL_POSTURES.find((p) => p.id === id) || null;
+          if (!base) return null;
+          if (currentLang === 'en' && POSTURE_EN[id]) {
+            return {
+              ...base,
+              ...POSTURE_EN[id],
+              category: CATEGORY_EN[base.category] || base.category,
+            };
+          }
+          return base;
+        }
+
+        // Butang kembali (ikon rumah, di penjuru kiri atas)
+        function createHomeButton() {
+          const a = document.createElement('a');
+          a.href = pageUrl('menu');
+          a.className = 'kg-home';
+          a.title = t('home');
+          a.setAttribute('aria-label', t('home'));
+          a.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.6 1.9 11.4a1 1 0 0 0 .66 1.76H4.5V20a1.4 1.4 0 0 0 1.4 1.4h3.7v-5.2h4.8v5.2h3.7a1.4 1.4 0 0 0 1.4-1.4v-6.84h1.94a1 1 0 0 0 .66-1.76L12 2.6Z"/></svg>';
+          a.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (activeTimerInterval) {
+              clearInterval(activeTimerInterval);
+              activeTimerInterval = null;
+            }
+            clearVictoryParticles();
+            playSfx('card_snap');
+            goTo('menu', 120);
+          });
+          return a;
+        }
+
+        function getPostureThumbHtml(p) {
+          if (!p) return '';
+          const fallbackSvg = p.svg || '';
+          if (p.assetId) {
+            // Susunan cuba: 1) fail dalam folder "imej" (offline)  2) salinan dalam talian  3) SVG terbina dalam
+            const localUrl = getLocalIconUrl(p.assetId);
+            const asset = getAssetInfo(p.assetId);
+            const remoteUrl = asset && asset.url ? asset.url : '';
+            const mainUrl = localUrl || remoteUrl;
+            if (mainUrl) {
+              const altAttr = localUrl && remoteUrl ? ` data-alt="${remoteUrl}"` : '';
+              return `<img src="${mainUrl}"${altAttr} alt="${p.name}" draggable="false" onerror="if (this.dataset.alt && !this.dataset.tried) { this.dataset.tried = '1'; this.src = this.dataset.alt; return; } this.style.display='none'; const fb = this.parentElement.querySelector('.svg-fallback'); if (fb) fb.style.display='block';" />${
+                fallbackSvg
+                  ? `<div class="svg-fallback" style="display:none; width:100%; height:100%;">${fallbackSvg}</div>`
+                  : ''
+              }`;
+            }
+          }
+          return fallbackSvg;
+        }
+
+
+        // Gambar hiasan (maskot): fail tempatan dahulu, kemudian salinan dalam talian.
+        function kgImgHtml(assetId, cls) {
+          const localUrl = getLocalIconUrl(assetId);
+          const asset = getAssetInfo(assetId);
+          const remoteUrl = asset && asset.url ? asset.url : '';
+          const mainUrl = localUrl || remoteUrl;
+          if (!mainUrl) return '';
+          const altAttr = localUrl && remoteUrl ? ` data-alt="${remoteUrl}"` : '';
+          return `<img class="${cls}" src="${mainUrl}"${altAttr} alt="" draggable="false" onerror="if (this.dataset.alt && !this.dataset.tried) { this.dataset.tried = '1'; this.src = this.dataset.alt; return; } this.style.display='none';" />`;
+        }
+
+        // Latar belakang landskap: cuba fail tempatan, kemudian dalam talian, kemudian kekal gradien langit.
+        function applyKgBackground(gameWorld) {
+          const candidates = [getLocalIconUrl('kg_background')];
+          const asset = getAssetInfo('kg_background');
+          if (asset && asset.url) candidates.push(asset.url);
+          const tryNext = (i) => {
+            if (i >= candidates.length || !candidates[i]) return i + 1 < candidates.length ? tryNext(i + 1) : undefined;
+            const img = new Image();
+            img.onload = () => {
+              gameWorld.style.backgroundImage = `url("${candidates[i]}")`;
+              gameWorld.style.backgroundSize = 'cover';
+              gameWorld.style.backgroundPosition = 'center bottom';
+              gameWorld.style.backgroundRepeat = 'no-repeat';
+              gameWorld.style.backgroundAttachment = 'fixed';
+            };
+            img.onerror = () => tryNext(i + 1);
+            img.src = candidates[i];
+          };
+          tryNext(0);
+        }
+
+        function getPostureImgUrl(posture) {
+          if (!posture || !posture.assetId) return '';
+          const local = getLocalIconUrl(posture.assetId);
+          if (local) return local;
+          const asset = getAssetInfo(posture.assetId);
+          return asset && asset.url ? asset.url : '';
+        }
+
+        function formatTime(seconds) {
+          const m = Math.floor(seconds / 60);
+          const s = seconds % 60;
+          return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function getTimerClass(seconds, total) {
+          const ratio = seconds / total;
+          if (ratio <= 0.2 || seconds <= 15) return 'danger';
+          if (ratio <= 0.5 || seconds <= 40) return 'warning';
+          return 'normal';
+        }
+
+        function shuffle(arr) {
+          const a = [...arr];
+          for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+          }
+          return a;
+        }
+
+        function startTimer() {
+          if (activeTimerInterval) {
+            clearInterval(activeTimerInterval);
+            activeTimerInterval = null;
+          }
+
+          if (mode !== 'play') return;
+
+          activeTimerInterval = setInterval(() => {
+            if (gameState !== 'playing') return;
+
+            timeLeft--;
+            updateTimerUI();
+            if (timeLeft <= 20 && timeLeft > 0) playWarningBeep();
+
+            // Pastikan audio context kekal aktif semasa countdown
+            if (timeLeft % 10 === 0 && audioCtx && audioCtx.state === 'suspended') {
+              audioCtx.resume().catch(() => {});
+            }
+
+            if (timeLeft <= 0) {
+              timeLeft = 0;
+              clearInterval(activeTimerInterval);
+              activeTimerInterval = null;
+              gameState = 'gameover';
+              evaluateAnswers();
+              recordResult();
+              playTimeoutSound();
+              render();
+            }
+          }, 1000);
+        }
+
+        function updateTimerUI() {
+          const timerEl = document.getElementById('timer-display');
+          if (!timerEl) return;
+
+          timerEl.textContent = formatTime(timeLeft);
+          const badge = timerEl.closest('.timer-badge');
+          if (badge) {
+            badge.classList.remove('normal', 'warning', 'danger');
+            badge.classList.add(getTimerClass(timeLeft, totalDuration));
+          }
+        }
+
+        // Main semula: susun semula kad, set semula pemasa dan mulakan pusingan baru di halaman ini
+        function restartGame() {
+          unlockAudio();
+          init(true);
+          playSfx('success_chime');
+        }
+
+        function init(keepPlayingState = false) {
+          if (activeTimerInterval) {
+            clearInterval(activeTimerInterval);
+            activeTimerInterval = null;
+          }
+          clearVictoryParticles();
+
+          slots = new Array(numPostures).fill(null);
+          trayItems = shuffle(postures.map((p) => p.id));
+          slotFeedback = new Array(numPostures).fill(null);
+          recentSnappedIndex = null;
+          lastCheckResult = null;
+          lastEntry = null;
+          entrySaved = false;
+          quickHint = null;
+          selectedPostureId = null;
+          selectedSource = null;
+          selectedSlotIndex = null;
+          if (activeHintTimeout) {
+            clearTimeout(activeHintTimeout);
+            activeHintTimeout = null;
+          }
+
+          // Jana pembayang yang berbeza bagi setiap permulaan permainan
+          activeHintsMap = {};
+          postures.forEach((p) => {
+            const len = p.hints && p.hints.length > 0 ? p.hints.length : 1;
+            activeHintsMap[p.id] = Math.floor(Math.random() * len);
+          });
+
+          // Pilih pembayang permulaan pusingan ini secara rawak
+          currentStarterHint = Math.floor(Math.random() * STARTER_HINTS.length);
+
+          gameState = keepPlayingState ? 'playing' : 'ready';
+          timeLeft = totalDuration;
+
+          render();
+          try {
+            gameWorld.scrollTop = 0;
+          } catch (e) {}
+
+          if (gameState === 'playing') {
+            startTimer();
+          }
+        }
+
+        /* ===================== SESI BERKUMPULAN (satu peranti, bergilir) =====================
+           Skor setiap pemain disimpan dalam pelayar (localStorage) dan disusun dalam papan kedudukan.
+           Susunan: skor tertinggi, kemudian baki masa terbanyak. */
+        const SESSION_KEY = 'solat-sesi-kartun';
+        let sessionPlayer = null; // { name, group }
+        const SHARED_PLAYER_KEY = 'solat-pemain-semasa';
+        const SUSUN_CERT_KEY = 'solat-sijil-susun';
+        function writeSharedPlayer(p) {
+          try {
+            window.localStorage.setItem(SHARED_PLAYER_KEY, JSON.stringify({ name: p.name }));
+            window.localStorage.removeItem(SUSUN_CERT_KEY); // pemain baharu: buang keputusan lama
+          } catch (e) {}
+        }
+        let lastEntry = null;
+        let lastRank = 0;
+        let lastRankTotal = 0;
+        let entrySaved = false;
+        let memorySession = null;
+        let storageWorks = true;
+
+        function esc(v) {
+          return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function loadSession() {
+          try {
+            const raw = window.localStorage.getItem(SESSION_KEY);
+            if (raw) {
+              const d = JSON.parse(raw);
+              if (d && Array.isArray(d.entries)) return d;
+            }
+          } catch (e) {
+            storageWorks = false;
+          }
+          return memorySession || { entries: [], lastGroup: '' };
+        }
+
+        function saveSession(d) {
+          memorySession = d;
+          try {
+            window.localStorage.setItem(SESSION_KEY, JSON.stringify(d));
+          } catch (e) {
+            storageWorks = false;
+          }
+        }
+
+        const keyOf = (n, g) => String(n || '').trim().toLowerCase() + '|' + String(g || '').trim().toLowerCase();
+        const isBetter = (a, b) =>
+          a.score !== b.score ? a.score > b.score : a.timeLeft !== b.timeLeft ? a.timeLeft > b.timeLeft : a.finishedAt < b.finishedAt;
+
+        // Keputusan terbaik bagi setiap pemain (nama + kumpulan)
+        function bestPerPlayer(entries) {
+          const map = new Map();
+          entries.forEach((e) => {
+            const k = keyOf(e.name, e.group);
+            const cur = map.get(k);
+            if (!cur || isBetter(e, cur)) map.set(k, e);
+          });
+          return [...map.values()];
+        }
+
+        function rankIndividuals(entries) {
+          const list = bestPerPlayer(entries).sort((a, b) => (isBetter(a, b) ? -1 : isBetter(b, a) ? 1 : 0));
+          list.forEach((e, i) => {
+            const prev = list[i - 1];
+            e._rank = prev && prev.score === e.score && prev.timeLeft === e.timeLeft ? prev._rank : i + 1;
+          });
+          return list;
+        }
+
+        function rankGroups(entries, mode) {
+          const map = new Map();
+          bestPerPlayer(entries).forEach((e) => {
+            const g = String(e.group || '').trim();
+            if (!g) return;
+            const k = g.toLowerCase();
+            const cur = map.get(k) || { name: g, members: 0, total: 0, timeLeft: 0 };
+            cur.members++;
+            cur.total += e.score;
+            cur.timeLeft += e.timeLeft;
+            map.set(k, cur);
+          });
+          const val = (x) => (mode === 'avg' ? x.avg : x.total);
+          const list = [...map.values()].map((x) => ({ ...x, avg: Math.round((x.total / x.members) * 10) / 10 }));
+          list.sort((a, b) => val(b) - val(a) || (mode === 'avg' ? b.total - a.total : b.avg - a.avg) || b.timeLeft - a.timeLeft);
+          list.forEach((g, i) => {
+            const prev = list[i - 1];
+            g._rank = prev && val(prev) === val(g) && prev.timeLeft === g.timeLeft ? prev._rank : i + 1;
+          });
+          return list;
+        }
+
+        // Simpan keputusan pemain semasa (sekali sahaja bagi setiap pusingan)
+        function recordResult() {
+          if (entrySaved || !sessionPlayer) return;
+          entrySaved = true;
+          const hasRes = !!(lastCheckResult && lastCheckResult.results);
+          const correct = hasRes ? lastCheckResult.correct : 0;
+          const entry = {
+            id: Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+            name: sessionPlayer.name,
+            group: sessionPlayer.group || '',
+            score: correct * 10,
+            correct,
+            total: numPostures,
+            accuracy: Math.round((correct / numPostures) * 100),
+            timeLeft: Math.max(0, timeLeft),
+            finishedAt: Date.now(),
+          };
+          const d = loadSession();
+          d.entries.push(entry);
+          d.lastGroup = entry.group;
+          saveSession(d);
+          lastEntry = entry;
+          try {
+            window.localStorage.setItem(SUSUN_CERT_KEY, JSON.stringify(certData()));
+          } catch (e) {}
+          const ranked = rankIndividuals(d.entries);
+          const mine = ranked.find((e) => keyOf(e.name, e.group) === keyOf(entry.name, entry.group));
+          lastRank = mine ? mine._rank : ranked.length;
+          lastRankTotal = ranked.length;
+        }
+
+        function sessionLineHtml() {
+          if (!lastEntry) return '';
+          const who = esc(lastEntry.name) + (lastEntry.group ? ' · ' + esc(lastEntry.group) : '');
+          return `<div class="sess-line"><span>👤 <b>${who}</b></span><span>${t('yourRank', { r: lastRank, n: lastRankTotal })}</span></div>`;
+        }
+
+        /* ===================== SIJIL ANUGERAH (PDF / IMEJ) ===================== */
+        function playerDisplayName() {
+          if (sessionPlayer && sessionPlayer.name) return sessionPlayer.name;
+          if (lastEntry && lastEntry.name) return lastEntry.name;
+          return t('guest', { n: 1 });
+        }
+
+        function certData() {
+          const hasResults = !!(lastCheckResult && lastCheckResult.results && !lastCheckResult.incomplete);
+          const correct = hasResults ? lastCheckResult.correct : 0;
+          return {
+            name: playerDisplayName(),
+            score: correct * 10,
+            maxScore: numPostures * 10,
+            time: formatTime(Math.max(0, totalDuration - timeLeft)),
+            date: new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }),
+            game: 'Susunan 13 Rukun Solat',
+            order: CORRECT_SEQUENCE.map((id) => {
+              const p = getPosture(id);
+              return { name: p ? p.name : id, arabic: p ? p.arabic : '' };
+            }),
+          };
+        }
+
+        function roundRectPath(c, x, y, w, h, r) {
+          c.beginPath();
+          c.moveTo(x + r, y);
+          c.arcTo(x + w, y, x + w, y + h, r);
+          c.arcTo(x + w, y + h, x, y + h, r);
+          c.arcTo(x, y + h, x, y, r);
+          c.arcTo(x, y, x + w, y, r);
+          c.closePath();
+        }
+
+        // Lukis sijil anugerah pada kanvas (A4 landskap)
+        function drawCertificate(d) {
+          const W = 1754, H = 1240;
+          const cv = document.createElement('canvas');
+          cv.width = W;
+          cv.height = H;
+          const c = cv.getContext('2d');
+          const GREEN = '#135347', GOLD = '#C2A144', CREAM = '#F4EFE1', PLUM = '#6B255B',
+            OLIVE = '#8A7A46', GREY = '#4A4A4A', PALE = '#F0D77C';
+          const SANS = '"Segoe UI", "Trebuchet MS", Arial, sans-serif';
+          const SERIF = 'Georgia, "Times New Roman", serif';
+          const ARAB = '"Amiri", "Scheherazade New", "Traditional Arabic", "Noto Naskh Arabic", "Segoe UI", Arial, serif';
+
+          c.fillStyle = CREAM;
+          c.fillRect(0, 0, W, H);
+
+          // Bingkai hijau tebal + bingkai emas berganda
+          c.strokeStyle = GREEN;
+          c.lineWidth = 26;
+          c.strokeRect(34, 34, W - 68, H - 68);
+          c.strokeStyle = GOLD;
+          c.lineWidth = 3;
+          c.strokeRect(66, 66, W - 132, H - 132);
+          c.lineWidth = 1.5;
+          c.strokeRect(78, 78, W - 156, H - 156);
+
+          // Bintang lapan penjuru di setiap penjuru
+          const star = (cx, cy, r) => {
+            c.beginPath();
+            for (let i = 0; i < 16; i++) {
+              const ang = (Math.PI / 8) * i - Math.PI / 2;
+              const rad = i % 2 === 0 ? r : r * 0.42;
+              const x = cx + Math.cos(ang) * rad;
+              const y = cy + Math.sin(ang) * rad;
+              if (i === 0) c.moveTo(x, y);
+              else c.lineTo(x, y);
+            }
+            c.closePath();
+            c.fillStyle = GOLD;
+            c.fill();
+          };
+          star(66, 66, 30);
+          star(W - 66, 66, 30);
+          star(66, H - 66, 30);
+          star(W - 66, H - 66, 30);
+
+          c.textAlign = 'center';
+          c.textBaseline = 'alphabetic';
+
+          // Tajuk
+          c.fillStyle = GREEN;
+          c.font = '800 88px ' + SERIF;
+          c.fillText(t('certTitle'), W / 2, 250);
+
+          // Sub tajuk (nama game)
+          c.fillStyle = OLIVE;
+          c.font = '600 26px ' + SANS;
+          c.fillText(d.game, W / 2, 306);
+
+          c.strokeStyle = GOLD;
+          c.lineWidth = 2;
+          c.beginPath();
+          c.moveTo(W / 2 - 190, 332);
+          c.lineTo(W / 2 + 190, 332);
+          c.stroke();
+
+          // Dianugerahkan kepada
+          c.fillStyle = GREY;
+          c.font = '400 28px ' + SANS;
+          c.fillText(t('certAwarded'), W / 2, 390);
+
+          // Nama penerima
+          let fs = 80;
+          const nameTxt = String(d.name || '').toUpperCase();
+          c.font = '800 ' + fs + 'px ' + SANS;
+          while (c.measureText(nameTxt).width > W - 420 && fs > 36) {
+            fs -= 4;
+            c.font = '800 ' + fs + 'px ' + SANS;
+          }
+          c.fillStyle = PLUM;
+          c.fillText(nameTxt, W / 2, 480);
+
+          const nw = c.measureText(nameTxt).width;
+          c.strokeStyle = GOLD;
+          c.lineWidth = 3;
+          c.beginPath();
+          c.moveTo(W / 2 - nw / 2 - 26, 506);
+          c.lineTo(W / 2 + nw / 2 + 26, 506);
+          c.stroke();
+
+          // Sebab anugerah
+          c.fillStyle = GREY;
+          c.font = '400 28px ' + SANS;
+          c.fillText(t('certReason'), W / 2, 556);
+
+          // Lencana skor
+          const badge = d.score + ' / ' + d.maxScore;
+          c.font = '800 52px ' + SANS;
+          const bw = Math.max(340, c.measureText(badge).width + 130);
+          const bh = 90;
+          const bx = W / 2 - bw / 2;
+          const by = 584;
+          roundRectPath(c, bx, by, bw, bh, bh / 2);
+          c.fillStyle = GREEN;
+          c.fill();
+          c.fillStyle = PALE;
+          c.fillText(badge, W / 2, by + 64);
+
+
+          // Susunan rukun yang betul (kedudukan + nama + bacaan)
+          const isEn = currentLang === 'en';
+          c.fillStyle = GREEN;
+          c.font = '800 30px ' + SANS;
+          c.fillText(isEn ? 'Correct Order of Pillars' : 'Susunan Rukun yang Betul', W / 2, 766);
+          c.strokeStyle = GOLD;
+          c.lineWidth = 2;
+          c.beginPath();
+          c.moveTo(W / 2 - 260, 782);
+          c.lineTo(W / 2 + 260, 782);
+          c.stroke();
+
+          const order = Array.isArray(d.order) ? d.order : [];
+          const cols = order.length > 8 ? 2 : 1;
+          const rows = Math.max(1, Math.ceil(order.length / cols));
+          const top = 812, bottom = 1098;
+          const step = Math.min(cols === 1 ? 42 : 44, (bottom - top) / rows);
+          const left = cols === 1 ? 210 : 150;
+          const colW = cols === 1 ? W - 420 : (W - 300) / 2;
+
+          // Susun atur baris: baris Arab panjang diberi ruang dua baris
+          let cursorY = top;
+          order.forEach((item, idx) => {
+            const col = cols === 1 ? 0 : Math.floor(idx / rows);
+            const row = cols === 1 ? idx : idx % rows;
+            const x0 = left + col * colW;
+            const y = cols === 1 ? cursorY + step * 0.7 : top + row * step + step * 0.7;
+
+            // Nombor kedudukan + nama rukun (kiri)
+            const label = (idx + 1) + '. ' + String(item.name || '');
+            let nfs = cols === 1 ? 26 : 22;
+            c.font = '700 ' + nfs + 'px ' + SANS;
+            while (c.measureText(label).width > colW * 0.5 && nfs > 14) {
+              nfs -= 1;
+              c.font = '700 ' + nfs + 'px ' + SANS;
+            }
+            const nameW = c.measureText(label).width;
+            c.textAlign = 'left';
+            c.fillStyle = GREEN;
+            c.fillText(label, x0, y);
+
+            // Bacaan Arab: sebaris dengan nama jika muat, jika tidak di baris bawah
+            let rowSpan = 1;
+            if (item.arabic && cols === 1) {
+              c.direction = 'rtl';
+              c.textAlign = 'right';
+              c.fillStyle = PLUM;
+              c.font = '700 30px ' + ARAB;
+              if (c.measureText(item.arabic).width <= colW - nameW - 40) {
+                c.fillText(item.arabic, x0 + colW - 20, y);
+              } else {
+                rowSpan = 2;
+                let afs = 26;
+                c.font = '700 ' + afs + 'px ' + ARAB;
+                while (c.measureText(item.arabic).width > colW - 40 && afs > 16) {
+                  afs -= 1;
+                  c.font = '700 ' + afs + 'px ' + ARAB;
+                }
+                c.fillText(item.arabic, x0 + colW - 20, y + step * 0.95);
+              }
+              c.direction = 'ltr';
+            }
+            if (cols === 1) cursorY += step * rowSpan;
+          });
+
+          // Tarikh (pengaki)
+          c.textAlign = 'center';
+          c.fillStyle = GREY;
+          c.font = '400 24px ' + SANS;
+          c.fillText(t('certDate') + ': ' + d.date, W / 2, 1130);
+
+          return cv;
+        }
+
+        function dataUrlToBytes(url) {
+          const b64 = String(url).split(',')[1] || '';
+          const bin = atob(b64);
+          const out = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+          return out;
+        }
+
+        // Bina PDF satu halaman dengan imej JPEG sijil di dalamnya
+        function certPdfBytes(jpegBytes, pxW, pxH) {
+          const W = 841.89, H = 595.28; // A4 landskap (mata)
+          const enc = new TextEncoder();
+          const parts = [];
+          const offs = {};
+          let len = 0;
+          const push = (x) => {
+            const b = typeof x === 'string' ? enc.encode(x) : x;
+            parts.push(b);
+            len += b.length;
+          };
+          const obj = (n, dict, stream) => {
+            offs[n] = len;
+            push(n + ' 0 obj\n' + dict + '\n');
+            if (stream) {
+              push('stream\n');
+              push(stream);
+              push('\nendstream\n');
+            }
+            push('endobj\n');
+          };
+          const content = 'q\n' + W + ' 0 0 ' + H + ' 0 0 cm\n/Im0 Do\nQ\n';
+          push('%PDF-1.4\n');
+          obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+          obj(2, '<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+          obj(3, '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>');
+          obj(4, '<< /Length ' + content.length + ' >>', enc.encode(content));
+          obj(5, '<< /Type /XObject /Subtype /Image /Width ' + pxW + ' /Height ' + pxH +
+            ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + jpegBytes.length + ' >>', jpegBytes);
+          const xrefStart = len;
+          let xref = 'xref\n0 6\n0000000000 65535 f \n';
+          for (let i = 1; i <= 5; i++) xref += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
+          push(xref);
+          push('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xrefStart + '\n%%EOF\n');
+          const out = new Uint8Array(len);
+          let p = 0;
+          for (const b of parts) {
+            out.set(b, p);
+            p += b.length;
+          }
+          return out;
+        }
+
+        function certFileName(ext) {
+          const base = String(playerDisplayName())
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+          return 'sijil-' + (base || 'pemain') + '.' + ext;
+        }
+
+        function triggerDownload(url, filename) {
+          let a = null;
+          try {
+            a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.rel = 'noopener';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+          } catch (err) {
+            console.error('Muat turun gagal:', err);
+          }
+          setTimeout(() => {
+            try {
+              if (a) a.remove();
+            } catch (e) {}
+          }, 20000);
+        }
+
+        // Satu klik: jana sijil dan muat turun PDF terus (tiada tetingkap tambahan).
+        function openCertificate() {
+          unlockAudio();
+          playSfx('card_snap');
+          try {
+            const d = certData();
+            const cv = drawCertificate(d);
+            const jpg = cv.toDataURL('image/jpeg', 0.92);
+            const bytes = certPdfBytes(dataUrlToBytes(jpg), cv.width, cv.height);
+            const blob = new Blob([bytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            triggerDownload(url, certFileName('pdf'));
+            setTimeout(() => URL.revokeObjectURL(url), 120000);
+          } catch (err) {
+            console.error('Gagal menjana sijil:', err);
+          }
+        }
+
+        function nextPlayer() {
+          unlockAudio();
+          init(false); // kembali ke skrin nama pemain dengan papan baharu
+        }
+
+        function buildOutcomeButtons(kind) {
+          // Kad tamat masa dan kad kejayaan: butang Muat Turun Sijil dan Halaman Utama
+          const row = document.createElement('div');
+          row.className = 'sess-actions';
+          const mk = (cls, html, fn) => {
+            const b = document.createElement('button');
+            b.className = 'btn ' + cls;
+            b.innerHTML = `<span>${html}</span>`;
+            b.addEventListener('click', fn);
+            row.appendChild(b);
+          };
+          mk('btn-accent', t('downloadCert'), openCertificate);
+          const homeBtn = document.createElement('a');
+          homeBtn.className = 'btn btn-secondary';
+          homeBtn.href = 'index.html';
+          homeBtn.style.textDecoration = 'none';
+          homeBtn.setAttribute('aria-label', 'Halaman Utama');
+          homeBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" style="vertical-align:-4px;margin-right:4px"><path d="M12 2.6 1.9 11.4a1 1 0 0 0 .66 1.76H4.5V20a1.4 1.4 0 0 0 1.4 1.4h3.7v-5.2h4.8v5.2h3.7a1.4 1.4 0 0 0 1.4-1.4v-6.84h1.94a1 1 0 0 0 .66-1.76L12 2.6Z"/></svg><span>Halaman Utama</span>';
+          homeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            unlockAudio();
+            playSfx('card_snap');
+            setTimeout(() => { window.location.href = 'index.html'; }, 450);
+          });
+          row.appendChild(homeBtn);
+          return row;
+        }
+
+        // Skrin memasukkan nama pemain / kumpulan sebelum permainan bermula
+        function renderStartModal() {
+          const d = loadSession();
+          const players = bestPerPlayer(d.entries).length;
+          const groups = [...new Set(d.entries.map((e) => e.group).filter(Boolean))];
+          const overlay = document.createElement('div');
+          overlay.className = 'modal-overlay';
+          const dlg = document.createElement('div');
+          dlg.className = 'outcome-dialog sess-setup';
+          dlg.style.border = '4px solid #FFD93B';
+          dlg.innerHTML = `
+                <div class="outcome-icon">👥</div>
+                <h2 class="outcome-title" style="color:#0F4FA8;">${t('setupTitle')}</h2>
+                <p class="outcome-desc">${t('setupDesc')}</p>
+                <label class="sess-field"><span>${t('playerName')}</span>
+                  <input id="sess-name" type="text" maxlength="24" autocomplete="off" placeholder="${esc(t('namePlaceholder'))}"></label>
+            `;
+          const row = document.createElement('div');
+          row.className = 'sess-actions';
+          const start = document.createElement('button');
+          start.className = 'btn btn-primary';
+          start.innerHTML = `<span>${t('startPlay')}</span>`;
+          const homeLink = document.createElement('a');
+          homeLink.className = 'btn btn-secondary';
+          homeLink.href = 'index.html';
+          homeLink.style.textDecoration = 'none';
+          homeLink.setAttribute('aria-label', 'Halaman Utama');
+          // Bunyi klik dimainkan dahulu, kemudian pemain dibawa ke halaman utama
+          homeLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            unlockAudio();
+            playSfx('card_snap');
+            setTimeout(() => { window.location.href = 'index.html'; }, 450);
+          });
+          homeLink.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" style="vertical-align:-4px;margin-right:4px"><path d="M12 2.6 1.9 11.4a1 1 0 0 0 .66 1.76H4.5V20a1.4 1.4 0 0 0 1.4 1.4h3.7v-5.2h4.8v5.2h3.7a1.4 1.4 0 0 0 1.4-1.4v-6.84h1.94a1 1 0 0 0 .66-1.76L12 2.6Z"/></svg><span>Halaman Utama</span>';
+          row.appendChild(homeLink);
+          row.appendChild(start);
+          dlg.appendChild(row);
+          overlay.appendChild(dlg);
+          gameWorld.appendChild(overlay);
+
+          const nameEl = dlg.querySelector('#sess-name');
+          const nameHint = document.createElement('p');
+          nameHint.className = 'outcome-desc';
+          nameHint.setAttribute('role', 'alert');
+          nameHint.style.cssText = 'color:#B42318;font-weight:700;margin:6px 0 0;display:none;';
+          nameHint.textContent = t('nameRequired');
+          nameEl.closest('.sess-field').after(nameHint);
+          nameEl.addEventListener('input', () => { if (nameEl.value.trim()) nameHint.style.display = 'none'; });
+          const groupEl = null; // medan kumpulan telah dibuang
+          const go = () => {
+            let nm = nameEl.value.trim();
+            if (!nm) { nameHint.style.display = 'block'; nameEl.focus(); return; }
+            let grp = groupEl ? groupEl.value.trim().slice(0, 24) : '';
+            // Guna ejaan kumpulan yang sama (A = a) supaya ranking kumpulan tidak terpecah
+            const known = d.entries.map((e) => e.group).find((g) => g && g.toLowerCase() === grp.toLowerCase());
+            if (known) grp = known;
+            sessionPlayer = { name: nm.slice(0, 24), group: grp };
+            writeSharedPlayer(sessionPlayer);
+            lastEntry = null;
+            entrySaved = false;
+            startGame();
+          };
+          start.addEventListener('click', go);
+          [nameEl].forEach((el) =>
+            el.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                go();
+              }
+            })
+          );
+          setTimeout(() => nameEl && nameEl.focus(), 60);
+        }
+
+        function csvCell(v) {
+          let s = String(v == null ? '' : v);
+          if (/^[=+\-@]/.test(s)) s = "'" + s; // elak formula dalam Excel
+          return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        }
+
+        function exportSessionCsv() {
+          const d = loadSession();
+          const rows = [['Nama', 'Kumpulan', 'Skor', 'Betul', 'Jumlah', 'Ketepatan (%)', 'Baki Masa', 'Masa Tamat']];
+          d.entries
+            .slice()
+            .sort((a, b) => a.finishedAt - b.finishedAt)
+            .forEach((e) =>
+              rows.push([e.name, e.group, e.score, e.correct, e.total, e.accuracy, formatTime(e.timeLeft), new Date(e.finishedAt).toLocaleString()])
+            );
+          const csv = '\ufeff' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n');
+          const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'keputusan-game-kartun.csv';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1500);
+        }
+
+        function closeLeaderboard() {
+          const old = document.getElementById('lb-overlay');
+          if (old) old.remove();
+        }
+
+        function openLeaderboard() {
+          closeLeaderboard();
+          let tab = 'ind';
+          let groupSort = 'total';
+          let confirmClear = false;
+          let confirmTimer = null;
+          const ov = document.createElement('div');
+          ov.className = 'lb-overlay';
+          ov.id = 'lb-overlay';
+          document.body.appendChild(ov);
+
+          const medal = (r) => (r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : '#' + r);
+
+          const draw = () => {
+            const d = loadSession();
+            const ind = rankIndividuals(d.entries);
+            const groups = rankGroups(d.entries, groupSort);
+            const meKey = sessionPlayer ? keyOf(sessionPlayer.name, sessionPlayer.group) : '';
+            let body = '';
+            if (tab === 'ind') {
+              body = ind.length
+                ? `<table class="lb-table"><thead><tr><th>#</th><th>${t('colName')}</th><th>${t('colScore')}</th><th>${t('colAccuracy')}</th><th>${t('colTime')}</th></tr></thead><tbody>${ind
+                    .map(
+                      (e) => `<tr class="${keyOf(e.name, e.group) === meKey ? 'lb-row-me' : ''}"><td class="lb-rank">${medal(e._rank)}</td><td class="lb-name">${esc(e.name)}${e.group ? `<small>${esc(e.group)}</small>` : ''}</td><td><b>⭐ ${e.score}</b></td><td>${e.accuracy}%</td><td>${formatTime(e.timeLeft)}</td></tr>`
+                    )
+                    .join('')}</tbody></table>`
+                : `<p class="lb-empty">${t('noEntries')}</p>`;
+            } else {
+              body = groups.length
+                ? `<div class="lb-sort"><span>${t('sortBy')}:</span><button type="button" data-sort="total" class="${groupSort === 'total' ? 'on' : ''}">${t('colTotal')}</button><button type="button" data-sort="avg" class="${groupSort === 'avg' ? 'on' : ''}">${t('colAverage')}</button></div><table class="lb-table"><thead><tr><th>#</th><th>${t('colGroup')}</th><th>${t('colMembers')}</th><th>${t('colTotal')}</th><th>${t('colAverage')}</th></tr></thead><tbody>${groups
+                    .map(
+                      (g) => `<tr class="${sessionPlayer && g.name.toLowerCase() === String(sessionPlayer.group || '').toLowerCase() ? 'lb-row-me' : ''}"><td class="lb-rank">${medal(g._rank)}</td><td class="lb-name">${esc(g.name)}</td><td>${g.members}</td><td><b>⭐ ${g.total}</b></td><td>${g.avg}</td></tr>`
+                    )
+                    .join('')}</tbody></table>`
+                : `<p class="lb-empty">${t('noGroups')}</p>`;
+            }
+            ov.innerHTML = `
+                <div class="lb-card" role="dialog" aria-modal="true">
+                  <div class="lb-head"><h2>🏆 ${t('lbTitle')}</h2></div>
+                  <div class="lb-tabs">
+                    <button type="button" data-tab="ind" class="lb-tab ${tab === 'ind' ? 'on' : ''}">${t('tabIndividual')}</button>
+                    <button type="button" data-tab="grp" class="lb-tab ${tab === 'grp' ? 'on' : ''}">${t('tabGroup')}</button>
+                  </div>
+                  <div class="lb-body">${body}</div>
+                  <p class="lb-note">${t('tieNote')}${storageWorks ? '' : '<br><b>' + t('storageWarn') + '</b>'}</p>
+                  <div class="lb-foot">
+                    <button type="button" class="btn btn-secondary" data-act="csv">${t('exportCsv')}</button>
+                    <button type="button" class="btn ${confirmClear ? 'btn-danger' : 'btn-secondary'}" data-act="clear">${confirmClear ? t('confirmNew') : t('newSession')}</button>
+                    <button type="button" class="btn btn-primary" data-act="close">${t('close')}</button>
+                  </div>
+                </div>`;
+            ov.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; draw(); }));
+            ov.querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => { groupSort = b.dataset.sort; draw(); }));
+            ov.querySelector('[data-act="csv"]').addEventListener('click', exportSessionCsv);
+            ov.querySelector('[data-act="close"]').addEventListener('click', closeLeaderboard);
+            ov.querySelector('[data-act="clear"]').addEventListener('click', () => {
+              if (!confirmClear) {
+                confirmClear = true;
+                clearTimeout(confirmTimer);
+                confirmTimer = setTimeout(() => { confirmClear = false; if (document.getElementById('lb-overlay')) draw(); }, 3500);
+                draw();
+                return;
+              }
+              clearTimeout(confirmTimer);
+              confirmClear = false;
+              saveSession({ entries: [], lastGroup: '' });
+              lastEntry = null;
+              draw();
+              if (gameState === 'victory' || gameState === 'gameover') render();
+            });
+          };
+          ov.addEventListener('click', (e) => { if (e.target === ov) closeLeaderboard(); });
+          draw();
+        }
+
+        function startGame() {
+          unlockAudio();
+          preloadAudioAssets(['success_chime', 'error_buzz', 'victory_music']);
+          gameState = 'playing';
+          render();
+          startTimer();
+          playSfx('success_chime');
+        }
+
+        function evaluateAnswers() {
+          let correctCount = 0;
+          const results = [];
+
+          for (let i = 0; i < numPostures; i++) {
+            const placedId = slots[i];
+            if (!placedId) {
+              results.push(null);
+              slotFeedback[i] = null;
+              continue;
+            }
+
+            const targetId = CORRECT_SEQUENCE[i];
+            let isMatch = placedId === targetId;
+
+            // Kelonggaran turutan sah: Berdiri tegak (Qiyam) & Takbiratul Ihram pada kedudukan 2 & 3
+            if (!isMatch) {
+              if (
+                (targetId === 'qiyam' || targetId === 'takbir') &&
+                (placedId === 'qiyam' || placedId === 'takbir')
+              ) {
+                const partnerIdx = i === 1 ? 2 : 1;
+                const expectedPartner = placedId === 'qiyam' ? 'takbir' : 'qiyam';
+                if (slots[partnerIdx] === expectedPartner) {
+                  isMatch = true;
+                }
+              }
+            }
+
+            if (isMatch) correctCount++;
+            results.push(isMatch);
+            slotFeedback[i] = isMatch ? 'correct' : 'wrong';
+          }
+
+          const evalObj = {
+            total: numPostures,
+            placed: slots.filter(Boolean).length,
+            correct: correctCount,
+            results,
+          };
+          lastCheckResult = evalObj;
+          return evalObj;
+        }
+
+        function showQuickHint() {
+          if (gameState !== 'playing') return;
+
+          const nextIndex = slots.findIndex((postureId) => !postureId);
+          if (nextIndex === -1) {
+            quickHint = {
+              index: null,
+              category: 'Info',
+              text: t('allPlacedHint', { n: numPostures }),
+            };
+          } else {
+            const targetPosture = getPosture(CORRECT_SEQUENCE[nextIndex]);
+            if (targetPosture) {
+              const hintsList = targetPosture.hints || [targetPosture.desc];
+              // Pilih pembayang dinamik bagi rukun ini
+              const chosenHint =
+                hintsList[Math.floor(Math.random() * hintsList.length)] || targetPosture.desc;
+              quickHint = {
+                index: nextIndex,
+                category: targetPosture.category,
+                text: chosenHint,
+              };
+            } else {
+              quickHint = {
+                index: nextIndex,
+                category: t('guide'),
+                text: t('guideText'),
+              };
+            }
+          }
+
+          if (activeHintTimeout) clearTimeout(activeHintTimeout);
+          activeHintTimeout = setTimeout(() => {
+            quickHint = null;
+            activeHintTimeout = null;
+            if (gameState === 'playing') render();
+          }, 5000);
+          render();
+          revealTopNotificationOnPhone();
+        }
+
+        function handleCheckAnswers() {
+          if (gameState !== 'playing') {
+            if (gameState === 'ready') {
+              startGame();
+            }
+            return;
+          }
+
+          const placedCount = slots.filter(Boolean).length;
+          if (placedCount < numPostures) {
+            lastCheckResult = {
+              incomplete: true,
+              placed: placedCount,
+              total: numPostures,
+              correct: 0,
+              results: new Array(numPostures).fill(null),
+            };
+            playSfx('card_snap');
+            render();
+            revealTopNotificationOnPhone();
+            return;
+          }
+
+          // Semua petak telah diisi: permainan dikira selesai berdasarkan keputusan semasa.
+          const res = evaluateAnswers();
+          if (activeTimerInterval) {
+            clearInterval(activeTimerInterval);
+            activeTimerInterval = null;
+          }
+          recordResult();
+          gameState = 'victory';
+          render();
+          if (res.correct === numPostures) {
+            playMusic('victory_music');
+            triggerVictoryParticles();
+          } else {
+            playSfx('success_chime');
+          }
+        }
+
+        // Render main view
+        function render() {
+          gameWorld.innerHTML = '';
+
+          const patternOverlay = document.createElement('div');
+          patternOverlay.className = 'pattern-overlay';
+          gameWorld.appendChild(patternOverlay);
+
+          const container = document.createElement('div');
+          container.className = 'game-container';
+
+          // Top Header with Title and Countdown Timer
+          const headerArea = document.createElement('div');
+          headerArea.className = 'header-area';
+
+          const timerClass = getTimerClass(timeLeft, totalDuration);
+          const timerBadgeClass = `timer-badge ${timerClass}`;
+          const placedNow = slots.filter(Boolean).length;
+          const scoreNow =
+            lastCheckResult && !lastCheckResult.incomplete && lastCheckResult.results
+              ? lastCheckResult.correct * 10
+              : 0;
+          const progressPct = Math.round((placedNow / numPostures) * 100);
+
+          headerArea.insertAdjacentHTML('beforeend', `
+                <div class="kg-header-row">
+                    <div class="kg-home-slot"></div>
+                    <div class="kg-title-wrap">
+                        <h1 class="kg-title"><span class="kg-title-a">${t('titleA')}</span><span class="kg-title-b">${t('titleB')}</span></h1>
+                        <p class="kg-ribbon">${t('subtitle', { n: numPostures })}</p>
+                        ${sessionPlayer ? `<div class="kg-player">👤 ${esc(sessionPlayer.name)}${sessionPlayer.group ? ' · ' + esc(sessionPlayer.group) : ''}</div>` : ''}
+                    </div>
+                    <div class="kg-stats">
+                        <div class="kg-pill kg-score"><span class="kg-star">⭐</span><span>${t('score')}: <b id="score-display">${scoreNow}</b></span></div>
+                        <div class="kg-pill kg-progress" title="${placedNow}/${numPostures}"><div class="kg-progress-fill" style="width:${progressPct}%"></div><span class="kg-progress-text">${placedNow}/${numPostures}</span></div>
+                        <div class="${timerBadgeClass}" title="${t('timeLeft')}">
+                            <span class="kg-clock">⏱️</span>
+                            <span id="timer-display">${formatTime(timeLeft)}</span>
+                        </div>
+                    </div>
+                </div>
+            `);
+          headerArea.querySelector('.kg-home-slot').appendChild(createHomeButton());
+          container.appendChild(headerArea);
+
+          // The puzzle section is centered independently, so the title remains at the top.
+          const gameplayArea = document.createElement('main');
+          gameplayArea.className = 'gameplay-area';
+
+          // Result feedback banner (if checked and game still playing)
+          if (lastCheckResult && gameState === 'playing') {
+            const banner = document.createElement('div');
+            if (lastCheckResult.incomplete) {
+              banner.className = 'result-banner partial';
+              banner.innerHTML = `<span>${t('incomplete', { n: numPostures, p: lastCheckResult.placed })}</span>`;
+            } else if (lastCheckResult.correct === numPostures) {
+              banner.className = 'result-banner success';
+              banner.innerHTML = `<span>${t('allCorrect', { n: numPostures })}</span>`;
+            } else {
+              banner.className = 'result-banner partial';
+              banner.innerHTML = `<span>${t('partial', { n: numPostures, c: lastCheckResult.correct })}</span>`;
+            }
+            gameplayArea.appendChild(banner);
+          }
+
+          // Brief, on-demand clue for the next empty answer slot (berbeza setiap kali dibuka)
+          if (quickHint) {
+            const hintPanel = document.createElement('div');
+            hintPanel.className = 'quick-hint-panel';
+            const catBadge = quickHint.category
+              ? `<span style="background:#2D9596; color:#FFFFFF; font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; margin-inline:4px;">${quickHint.category}</span>`
+              : '';
+            const prefix =
+              quickHint.index === null ? t('hint') : t('hintFor', { i: quickHint.index + 1 });
+            hintPanel.innerHTML = `<span>💡</span><div><strong>${prefix}:</strong> ${catBadge}${quickHint.text}</div>`;
+            gameplayArea.appendChild(hintPanel);
+          } else if (
+            showHints &&
+            currentStarterHint !== null &&
+            gameState === 'playing' &&
+            !lastCheckResult
+          ) {
+            // Pembayang permulaan yang bertukar secara rawak setiap pusingan baharu
+            const starterList = currentLang === 'en' ? STARTER_HINTS_EN : STARTER_HINTS;
+            const starterBanner = document.createElement('div');
+            starterBanner.className = 'starter-hint-banner';
+            starterBanner.innerHTML = `<span>✨ ${starterList[currentStarterHint] || ''}</span>`;
+            gameplayArea.appendChild(starterBanner);
+          }
+
+          // Panduan ketik kad (Tap to Place Guide)
+          if (selectedPostureId && gameState === 'playing') {
+            const selP = getPosture(selectedPostureId);
+            const guide = document.createElement('div');
+            guide.className = 'tap-guide-banner';
+            guide.innerHTML = `
+                <div>👉 <b>${selP ? selP.name : t('pillar')}</b> ${t('selected')}</div>
+                <button class="btn-cancel-select" type="button">${t('cancel')}</button>
+            `;
+            guide.querySelector('.btn-cancel-select').addEventListener('click', (e) => {
+              e.stopPropagation();
+              cancelSelection();
+            });
+            gameplayArea.appendChild(guide);
+          }
+
+          // Slots Area (Set Jawapan)
+          const slotsArea = document.createElement('div');
+          slotsArea.className = 'slots-area';
+
+          for (let i = 0; i < numPostures; i++) {
+            const slot = document.createElement('div');
+            const placedId = slots[i];
+            let slotClasses = ['slot'];
+
+            if (numPostures === 13 && i === 12) {
+              slotClasses.push('slot-centered-last');
+            }
+
+            if (placedId) {
+              slotClasses.push('filled');
+              if (selectedSource === 'slot' && selectedSlotIndex === i) {
+                slotClasses.push('slot-selected');
+              }
+            }
+
+            let badgeHtml = '';
+            let isSlotCorrect = null;
+            if (
+              lastCheckResult &&
+              !lastCheckResult.incomplete &&
+              lastCheckResult.results &&
+              lastCheckResult.results[i] !== null &&
+              lastCheckResult.results[i] !== undefined
+            ) {
+              isSlotCorrect = lastCheckResult.results[i];
+            }
+
+            if (isSlotCorrect === true) {
+              slotClasses.push('result-correct');
+              badgeHtml = `<div class="slot-status-badge correct" title="${t('correct')}">✓</div>`;
+            } else if (isSlotCorrect === false) {
+              slotClasses.push('result-wrong');
+              badgeHtml = `<div class="slot-status-badge wrong" title="${t('wrong')}">✗</div>`;
+            }
+
+            if (recentSnappedIndex === i) {
+              slotClasses.push('just-snapped');
+            }
+
+            slot.className = slotClasses.join(' ');
+            slot.dataset.index = i;
+
+            // Slot sequence number
+            const numEl = document.createElement('div');
+            numEl.className = 'slot-number';
+            numEl.textContent = i + 1;
+            slot.appendChild(numEl);
+
+            if (placedId) {
+              const p = getPosture(placedId);
+              const content = document.createElement('div');
+              content.className = 'slot-content';
+
+              const thumb = document.createElement('div');
+              thumb.className = 'slot-art-thumb';
+              thumb.innerHTML = getPostureThumbHtml(p);
+              content.appendChild(thumb);
+
+              const textGroup = document.createElement('div');
+              textGroup.className = 'slot-text-group';
+              textGroup.innerHTML = `
+                        <div class="slot-icon-label">${p.name}</div>
+                        <div class="slot-icon-desc">${p.desc}</div>
+                    `;
+              content.appendChild(textGroup);
+              slot.appendChild(content);
+
+              if (badgeHtml) {
+                slot.insertAdjacentHTML('beforeend', badgeHtml);
+              }
+
+              // Butang '✕' untuk pulangkan kad ke pilihan dengan satu ketikan pantas
+              const removeBtn = document.createElement('button');
+              removeBtn.className = 'btn-slot-remove';
+              removeBtn.type = 'button';
+              removeBtn.title = t('returnCard');
+              removeBtn.innerHTML = '✕';
+              removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleDropToTray(i);
+              });
+              slot.appendChild(removeBtn);
+
+              setupDragSource(slot, placedId, 'slot', i);
+            } else {
+              const emptyLabel = document.createElement('div');
+              emptyLabel.className = 'slot-empty-label';
+              const targetPosture = getPosture(CORRECT_SEQUENCE[i]);
+              const dynamicHint = targetPosture
+                ? (targetPosture.hints || [])[activeHintsMap[targetPosture.id]] || targetPosture.desc
+                : '';
+              const hintHtml =
+                showHints && targetPosture
+                  ? `<span class="slot-hint-text">💡 ${dynamicHint}</span>`
+                  : `<span class="slot-hint-text">${targetPosture ? targetPosture.category : ''}</span>`;
+              emptyLabel.innerHTML = `
+                        <div class="slot-picture">${hintHtml}</div>
+                        <div class="slot-drop"><span class="slot-q">?</span><span class="slot-empty-main">${t('pillarN', { i: i + 1 })}</span></div>
+                    `;
+              slot.appendChild(emptyLabel);
+
+              slot.style.cursor = 'pointer';
+              slot.addEventListener('click', () => {
+                if (Date.now() - lastTouchTapTime < 600) return;
+                if (selectedPostureId) {
+                  handleEmptySlotTap(i);
+                }
+              });
+            }
+
+            slotsArea.appendChild(slot);
+          }
+
+          gameplayArea.appendChild(slotsArea);
+
+          // Tray Area (Kad Pembayang) - directly below slots
+          const trayArea = document.createElement('div');
+          trayArea.className = 'tray-area';
+
+          const isMobileUI = isNonComputerDevice();
+          const autoHintHtml = isMobileUI
+            ? `<span style="font-size:11.5px; color:#CFE8FF; font-weight:normal; margin-left:6px;">${t('tapAuto')}</span>`
+            : '';
+
+          const trayHeader = document.createElement('div');
+          trayHeader.className = 'tray-header';
+          trayHeader.innerHTML = `
+                <div class="tray-label"><span class="tray-hand">👆</span><span>${t('dragGuide')} ${autoHintHtml}</span></div>
+                <div class="tray-count">${t('trayCount', { k: trayItems.length })}</div>
+            `;
+          trayArea.appendChild(trayHeader);
+
+          const tray = document.createElement('div');
+          tray.className = 'tray';
+
+          if (trayItems.length === 0) {
+            const hint = document.createElement('div');
+            hint.className = 'tray-empty-hint';
+            hint.textContent = t('trayEmpty', { n: numPostures });
+            tray.appendChild(hint);
+          } else {
+            for (const id of trayItems) {
+              const p = getPosture(id);
+
+              const icon = document.createElement('div');
+              icon.className = 'posture-icon';
+              if (selectedSource === 'tray' && selectedPostureId === id) {
+                icon.classList.add('card-selected');
+              }
+              icon.dataset.postureId = id;
+
+              const artWrap = document.createElement('div');
+              artWrap.className = 'posture-art-wrap';
+              artWrap.innerHTML = getPostureThumbHtml(p);
+              icon.appendChild(artWrap);
+
+              const label = document.createElement('div');
+              label.className = 'icon-label';
+              label.textContent = p.name;
+              icon.appendChild(label);
+
+              setupDragSource(icon, id, 'tray', null);
+              tray.appendChild(icon);
+            }
+          }
+
+          trayArea.appendChild(tray);
+          gameplayArea.appendChild(trayArea);
+
+          // Action Buttons Bar (placed below Tray)
+          const actionsBar = document.createElement('div');
+          actionsBar.className = 'actions-bar';
+
+          const placedCount = slots.filter(Boolean).length;
+          const isComplete = placedCount === numPostures;
+
+          const checkBtn = document.createElement('button');
+          checkBtn.className = isComplete ? 'btn btn-primary btn-ready' : 'btn btn-primary';
+          checkBtn.innerHTML = isComplete
+            ? `<span>✓ ${t('check')} (${placedCount}/${numPostures})</span>`
+            : `<span>⏳ ${t('check')} (${placedCount}/${numPostures})</span>`;
+          checkBtn.addEventListener('click', handleCheckAnswers);
+          actionsBar.appendChild(checkBtn);
+
+          const hintBtn = document.createElement('button');
+          hintBtn.className = 'btn btn-accent';
+          hintBtn.innerHTML = `<span>${t('showHint')}</span>`;
+          hintBtn.title = t('showHintTitle');
+          hintBtn.addEventListener('click', showQuickHint);
+          actionsBar.appendChild(hintBtn);
+
+
+          // Maskot + gelembung ucapan di sebelah kiri bar butang
+          const mascot = document.createElement('div');
+          mascot.className = 'kg-mascot';
+          mascot.innerHTML = `${kgImgHtml('kg_mascot', 'kg-mascot-img')}<div class="kg-bubble">${t('mascotSay')} ⭐</div>`;
+          actionsBar.insertBefore(mascot, actionsBar.firstChild);
+
+          container.appendChild(gameplayArea);
+          container.appendChild(actionsBar); // di luar grid supaya boleh melekat di bawah skrin (desktop)
+
+          gameWorld.appendChild(container);
+          recentSnappedIndex = null;
+
+          // Active modals & overlays
+          if (gameState === 'ready') {
+            renderStartModal();
+          } else if (gameState === 'victory') {
+            renderVictoryModal();
+          } else if (gameState === 'gameover') {
+            renderGameOverModal();
+          }
+        }
+
+        // Buka halaman Kuiz Solat (kuiz.html)
+        // Cabaran seterusnya: pergi ke game bacaan
+        function openNextChallenge() {
+          if (activeTimerInterval) {
+            clearInterval(activeTimerInterval);
+            activeTimerInterval = null;
+          }
+          clearVictoryParticles();
+          unlockAudio();
+          playSfx('card_snap');
+          try { window.localStorage.setItem('solat-auto-mula', '1'); } catch (e) {}
+          window.location.href = 'game-bacaan.html';
+        }
+
+        function openQuizPage() {
+          if (activeTimerInterval) {
+            clearInterval(activeTimerInterval);
+            activeTimerInterval = null;
+          }
+          clearVictoryParticles();
+          unlockAudio();
+          playSfx('card_snap');
+          goTo('quiz', 150);
+        }
+
+        // Victory Overlay Modal
+        function renderVictoryModal() {
+          const overlay = document.createElement('div');
+          overlay.className = 'modal-overlay';
+
+          const hasResults = !!(lastCheckResult && lastCheckResult.results);
+          const correctNow = hasResults ? lastCheckResult.correct : 0;
+          const accuracyPct = Math.round((correctNow / numPostures) * 100);
+          const finalScore = correctNow * 10;
+          const elapsedSeconds = Math.max(0, totalDuration - timeLeft);
+          const perfect = correctNow === numPostures;
+          const dialog = document.createElement('div');
+          dialog.className = 'outcome-dialog';
+          dialog.style.border = perfect ? '4px solid #4CAF50' : '4px solid #F2B705';
+
+          dialog.innerHTML = `
+                <div class="outcome-icon">${perfect ? '🎉' : '🌟'}</div>
+                <h2 class="outcome-title" style="color: ${perfect ? 'var(--success)' : '#0F4FA8'};">${perfect ? t('winTitle') : t('doneTitle')}</h2>
+                <p class="outcome-desc">${perfect ? t('winDesc', { n: numPostures }) : t('doneDesc', { c: correctNow, n: numPostures })}</p>
+                <div class="outcome-stats-card">
+                    <div class="outcome-stat-item">
+                        <span class="stat-value stat-name">${esc(playerDisplayName())}</span>
+                        <span class="stat-label">${t('playerName')}</span>
+                    </div>
+                    <div class="outcome-stat-item">
+                        <span class="stat-value" style="color:#B45309;">⭐ ${finalScore}</span>
+                        <span class="stat-label">${t('totalScore')}</span>
+                    </div>
+                    <div class="outcome-stat-item">
+                        <span class="stat-value" style="color:#0F4FA8;">${formatTime(elapsedSeconds)}</span>
+                        <span class="stat-label">${t('timeTaken')}</span>
+                    </div>
+                </div>
+            `;
+
+          dialog.appendChild(buildOutcomeButtons('victory'));
+          overlay.appendChild(dialog);
+          gameWorld.appendChild(overlay);
+        }
+
+        // Game Over Overlay Modal (when timer expires)
+        function renderGameOverModal() {
+          const overlay = document.createElement('div');
+          overlay.className = 'modal-overlay';
+
+          const hasResults = !!(lastCheckResult && !lastCheckResult.incomplete && lastCheckResult.results);
+          const correctCount = hasResults ? lastCheckResult.correct : 0;
+          const finalScore = correctCount * 10; // sama dengan Skor di header
+          const elapsedSeconds = Math.max(0, totalDuration - timeLeft);
+          const dialog = document.createElement('div');
+          dialog.className = 'outcome-dialog';
+          dialog.style.border = '4px solid var(--error)';
+
+          dialog.innerHTML = `
+                <div class="outcome-icon">⏰</div>
+                <h2 class="outcome-title" style="color: var(--error);">${t('loseTitle')}</h2>
+                <p class="outcome-desc">${t('loseDesc', { n: numPostures })}</p>
+                <div class="outcome-stats-card">
+                    <div class="outcome-stat-item">
+                        <span class="stat-value stat-name">${esc(playerDisplayName())}</span>
+                        <span class="stat-label">${t('playerName')}</span>
+                    </div>
+                    <div class="outcome-stat-item">
+                        <span class="stat-value" style="color:#B45309;">⭐ ${finalScore}</span>
+                        <span class="stat-label">${t('totalScore')}</span>
+                    </div>
+                    <div class="outcome-stat-item">
+                        <span class="stat-value" style="color:#0F4FA8;">${formatTime(elapsedSeconds)}</span>
+                        <span class="stat-label">${t('timeTaken')}</span>
+                    </div>
+                </div>
+            `;
+
+          dialog.appendChild(buildOutcomeButtons('gameover'));
+          overlay.appendChild(dialog);
+          gameWorld.appendChild(overlay);
+        }
+
+        // Drag Preview Handling
+        let previewEl = null;
+
+        function createPreview(postureId, x, y) {
+          removePreview();
+          const p = getPosture(postureId);
+
+          previewEl = document.createElement('div');
+          previewEl.className = 'posture-icon drag-preview';
+          previewEl.style.left = x + 'px';
+          previewEl.style.top = y + 'px';
+
+          const artWrap = document.createElement('div');
+          artWrap.className = 'posture-art-wrap';
+          artWrap.innerHTML = getPostureThumbHtml(p);
+          previewEl.appendChild(artWrap);
+
+          const label = document.createElement('div');
+          label.className = 'icon-label';
+          label.textContent = p.name;
+          previewEl.appendChild(label);
+
+          document.body.appendChild(previewEl);
+        }
+
+        function movePreview(x, y) {
+          if (previewEl) {
+            previewEl.style.left = x + 'px';
+            previewEl.style.top = y + 'px';
+          }
+        }
+
+        function removePreview() {
+          if (previewEl) {
+            previewEl.remove();
+            previewEl = null;
+          }
+        }
+
+        function cancelSelection() {
+          selectedPostureId = null;
+          selectedSource = null;
+          selectedSlotIndex = null;
+          render();
+        }
+
+        function handleTapSelect(postureId, source, sourceIndex, isTouch = false) {
+          if (gameState !== 'playing') return;
+
+          const isMobile = isNonComputerDevice() || isTouch;
+
+          // Ciri khas untuk peranti selain komputer (telefon pintar & tablet):
+          // Mengetik kad di tray akan automatik memasukkannya ke slot kosong yang pertama
+          if (isMobile && source === 'tray') {
+            const emptySlotIndex = slots.findIndex((s) => !s);
+            if (emptySlotIndex !== -1) {
+              trayItems = trayItems.filter((id) => id !== postureId);
+              slots[emptySlotIndex] = postureId;
+              recentSnappedIndex = emptySlotIndex;
+              lastCheckResult = null;
+              quickHint = null;
+              slotFeedback = new Array(numPostures).fill(null);
+              selectedPostureId = null;
+              selectedSource = null;
+              selectedSlotIndex = null;
+              playSfx('card_snap');
+              render();
+              return;
+            } else {
+              // Semua slot telah penuh diisi
+              playSfx('error_buzz');
+              return;
+            }
+          }
+
+          // Pada peranti selain komputer, mengetik kad di dalam slot akan memulangkannya ke tray
+          if (isMobile && source === 'slot') {
+            handleDropToTray(sourceIndex);
+            return;
+          }
+
+          // Untuk komputer (desktop/laptop dengan tetikus), kekalkan ciri klik pilih & letak (tap-to-place / drag):
+          if (
+            selectedPostureId === postureId &&
+            selectedSource === source &&
+            selectedSlotIndex === sourceIndex
+          ) {
+            cancelSelection();
+            return;
+          }
+
+          // If a card was already selected and user taps a filled slot:
+          if (selectedPostureId && source === 'slot') {
+            dragState = {
+              postureId: selectedPostureId,
+              source: selectedSource,
+              sourceIndex: selectedSlotIndex,
+            };
+            handleDrop(sourceIndex);
+            cancelSelection();
+            return;
+          }
+
+          // Otherwise, select this posture
+          selectedPostureId = postureId;
+          selectedSource = source;
+          selectedSlotIndex = sourceIndex;
+          playSfx('card_snap');
+          render();
+        }
+
+        function handleEmptySlotTap(slotIndex) {
+          if (gameState !== 'playing') return;
+
+          if (selectedPostureId) {
+            dragState = {
+              postureId: selectedPostureId,
+              source: selectedSource,
+              sourceIndex: selectedSlotIndex,
+            };
+            handleDrop(slotIndex);
+            cancelSelection();
+          }
+        }
+
+        function setupDragSource(el, postureId, source, sourceIndex) {
+          let startX = 0,
+            startY = 0,
+            isDragging = false,
+            touchHoldTimer = null,
+            touchGestureCancelled = false,
+            lastTouchX = 0,
+            lastTouchY = 0,
+            hasMoved = false;
+
+          function clearTouchHoldTimer() {
+            if (touchHoldTimer) {
+              clearTimeout(touchHoldTimer);
+              touchHoldTimer = null;
+            }
+          }
+
+          function onStart(cx, cy) {
+            if (gameState !== 'playing') return;
+            startX = cx;
+            startY = cy;
+            lastTouchX = cx;
+            lastTouchY = cy;
+            isDragging = false;
+            hasMoved = false;
+          }
+
+          function beginDrag(cx, cy, e) {
+            if (isDragging || gameState !== 'playing') return;
+            isDragging = true;
+            dragState = { postureId, source, sourceIndex };
+            el.classList.add('dragging');
+            createPreview(postureId, cx, cy);
+            if (e && e.cancelable) e.preventDefault();
+          }
+
+          function onMove(cx, cy, e) {
+            if (gameState !== 'playing') return;
+            const dx = cx - startX,
+              dy = cy - startY;
+            if (!isDragging && dx * dx + dy * dy > 64) {
+              beginDrag(cx, cy, e);
+            }
+            if (isDragging) {
+              if (e && e.cancelable) e.preventDefault();
+              movePreview(cx, cy);
+              updateSlotHighlights(cx, cy);
+            }
+          }
+
+          function onEnd(cx, cy) {
+            clearTouchHoldTimer();
+            if (isDragging) {
+              const targetSlotIndex = findSlotAt(cx, cy);
+              if (targetSlotIndex !== null) {
+                handleDrop(targetSlotIndex);
+              } else if (source === 'slot') {
+                const trayEl = gameWorld.querySelector('.tray-area');
+                if (trayEl) {
+                  const trayRect = trayEl.getBoundingClientRect();
+                  if (
+                    cx >= trayRect.left &&
+                    cx <= trayRect.right &&
+                    cy >= trayRect.top &&
+                    cy <= trayRect.bottom
+                  ) {
+                    handleDropToTray(sourceIndex);
+                  }
+                }
+              }
+              el.classList.remove('dragging');
+              clearSlotHighlights();
+              removePreview();
+              dragState = null;
+            }
+            isDragging = false;
+            touchGestureCancelled = false;
+          }
+
+          // Touch support: pure tap selects/places; swiping scrolls smoothly; intentional hold (350ms) starts drag.
+          el.addEventListener(
+            'touchstart',
+            (e) => {
+              if (gameState !== 'playing') return;
+              const t = e.touches[0];
+              onStart(t.clientX, t.clientY);
+              touchGestureCancelled = false;
+              clearTouchHoldTimer();
+              touchHoldTimer = setTimeout(() => {
+                touchHoldTimer = null;
+                if (!touchGestureCancelled && !hasMoved && gameState === 'playing') {
+                  beginDrag(lastTouchX, lastTouchY, null);
+                }
+              }, 350);
+            },
+            { passive: true }
+          );
+
+          el.addEventListener(
+            'touchmove',
+            (e) => {
+              const t = e.touches[0];
+              lastTouchX = t.clientX;
+              lastTouchY = t.clientY;
+
+              if (!isDragging) {
+                const dx = lastTouchX - startX;
+                const dy = lastTouchY - startY;
+                // Movement > 6px is a scroll gesture -> cancel drag hold timer and do not block scroll!
+                if (dx * dx + dy * dy > 36) {
+                  hasMoved = true;
+                  touchGestureCancelled = true;
+                  clearTouchHoldTimer();
+                }
+                return; // Let native vertical scroll proceed!
+              }
+
+              if (e.cancelable) e.preventDefault();
+              movePreview(lastTouchX, lastTouchY);
+              updateSlotHighlights(lastTouchX, lastTouchY);
+            },
+            { passive: false }
+          );
+
+          el.addEventListener('touchend', (e) => {
+            clearTouchHoldTimer();
+            const t = e.changedTouches[0];
+            const dx = t.clientX - startX;
+            const dy = t.clientY - startY;
+
+            if (isDragging) {
+              onEnd(t.clientX, t.clientY);
+            } else if (!hasMoved && dx * dx + dy * dy <= 36) {
+              // Clean tap without scroll movement
+              lastTouchTapTime = Date.now();
+              handleTapSelect(postureId, source, sourceIndex, true);
+            }
+            isDragging = false;
+            touchGestureCancelled = false;
+            hasMoved = false;
+          });
+
+          el.addEventListener('touchcancel', () => {
+            clearTouchHoldTimer();
+            touchGestureCancelled = true;
+            if (isDragging) {
+              el.classList.remove('dragging');
+              clearSlotHighlights();
+              removePreview();
+              dragState = null;
+              isDragging = false;
+            }
+          });
+
+          // Mouse support keeps immediate drag & drop + click to select on computers
+          let mouseMoved = false;
+          el.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            if (Date.now() - lastTouchTapTime < 600) return;
+            onStart(e.clientX, e.clientY);
+            mouseMoved = false;
+
+            const mousemove = (e2) => {
+              const dx = e2.clientX - startX;
+              const dy = e2.clientY - startY;
+              if (dx * dx + dy * dy > 9) {
+                mouseMoved = true;
+              }
+              onMove(e2.clientX, e2.clientY, e2);
+            };
+            const mouseup = (e2) => {
+              window.removeEventListener('mousemove', mousemove);
+              window.removeEventListener('mouseup', mouseup);
+              if (isDragging) {
+                onEnd(e2.clientX, e2.clientY);
+              } else if (!mouseMoved) {
+                handleTapSelect(postureId, source, sourceIndex, false);
+              }
+            };
+            window.addEventListener('mousemove', mousemove);
+            window.addEventListener('mouseup', mouseup);
+          });
+        }
+
+        function findSlotAt(cx, cy) {
+          const slotEls = gameWorld.querySelectorAll('.slot');
+          for (let i = 0; i < slotEls.length; i++) {
+            const rect = slotEls[i].getBoundingClientRect();
+            if (cx >= rect.left && cx <= rect.right && cy >= rect.top && cy <= rect.bottom) {
+              return parseInt(slotEls[i].dataset.index);
+            }
+          }
+          return null;
+        }
+
+        function updateSlotHighlights(cx, cy) {
+          const slotEls = gameWorld.querySelectorAll('.slot');
+          slotEls.forEach((el) => {
+            const rect = el.getBoundingClientRect();
+            if (cx >= rect.left && cx <= rect.right && cy >= rect.top && cy <= rect.bottom) {
+              el.classList.add('drag-over');
+            } else {
+              el.classList.remove('drag-over');
+            }
+          });
+        }
+
+        function clearSlotHighlights() {
+          gameWorld.querySelectorAll('.slot').forEach((el) => el.classList.remove('drag-over'));
+        }
+
+        function handleDropToTray(slotIndex) {
+          const postureId = slots[slotIndex];
+          if (!postureId) return;
+          slots[slotIndex] = null;
+          slotFeedback[slotIndex] = null;
+          lastCheckResult = null;
+          selectedPostureId = null;
+          selectedSource = null;
+          selectedSlotIndex = null;
+          if (!trayItems.includes(postureId)) {
+            trayItems.push(postureId);
+          }
+          playSfx('card_snap');
+          render();
+        }
+
+        function handleDrop(targetIndex) {
+          if (!dragState) return;
+
+          const { postureId, source, sourceIndex } = dragState;
+          const existingInTarget = slots[targetIndex];
+
+          // Reset previous check evaluation and any temporary clue on modification
+          lastCheckResult = null;
+          quickHint = null;
+          selectedPostureId = null;
+          selectedSource = null;
+          selectedSlotIndex = null;
+          if (activeHintTimeout) {
+            clearTimeout(activeHintTimeout);
+            activeHintTimeout = null;
+          }
+          slotFeedback = new Array(numPostures).fill(null);
+
+          if (source === 'tray') {
+            trayItems = trayItems.filter((id) => id !== postureId);
+            if (existingInTarget) {
+              trayItems.push(existingInTarget);
+            }
+            slots[targetIndex] = postureId;
+          } else if (source === 'slot') {
+            slots[sourceIndex] = existingInTarget;
+            slots[targetIndex] = postureId;
+          }
+
+          recentSnappedIndex = targetIndex;
+          playSfx('card_snap');
+          render();
+        }
+
+        // Creator settings are only shown inside Astrocade. The standalone edition
+        // deliberately has no host dependency and uses the defaults below.
+        if (window.lib && typeof window.lib.showGameParameters === 'function') {
+          window.lib.showGameParameters({
+            name: 'Tetapan Solat',
+            params: {
+              'Tempoh Masa (Saat)': {
+                key: 'timerDuration',
+                type: 'slider',
+                min: 20,
+                max: 120,
+                step: 5,
+                onChange: (val) => {
+                  window.gameConfig.timerDuration = val;
+                  init();
+                },
+              },
+              'Bilangan Rukun': {
+                key: 'numPostures',
+                type: 'slider',
+                min: 3,
+                max: 13,
+                step: 1,
+                onChange: (val) => {
+                  window.gameConfig.numPostures = val;
+                  init();
+                },
+              },
+              'Kelantangan SFX': {
+                key: 'sfxVolume',
+                type: 'slider',
+                min: 0,
+                max: 1,
+                step: 0.05,
+                onChange: (val) => {
+                  window.gameConfig.sfxVolume = val;
+                },
+              },
+              'Kelantangan Muzik': {
+                key: 'musicVolume',
+                type: 'slider',
+                min: 0,
+                max: 1,
+                step: 0.05,
+                onChange: (val) => {
+                  window.gameConfig.musicVolume = val;
+                },
+              },
+              'Tunjuk Pembayang (Hints)': {
+                key: 'showHints',
+                type: 'checkbox',
+                onChange: (val) => {
+                  window.gameConfig.showHints = val;
+                  render();
+                },
+              },
+            },
+          });
+        }
+
+        // Sesi berkumpulan: skrin nama pemain dipaparkan dahulu; pemasa bermula selepas "Mula Bermain".
+        init();
+      }
+
+      // Astrocade calls run(mode) itself. When this file is opened directly from a folder,
+      // create the default configuration and start the playable standalone edition.
+      window.run = run;
+      window.addEventListener('DOMContentLoaded', () => {
+        if (!window.lib) {
+          window.gameConfig = window.gameConfig || {
+            numPostures: 13,
+            timerDuration: 90,
+            showHints: true,
+            sfxVolume: 0.8,
+            musicVolume: 0.7,
+          };
+          run('play');
+        }
+      });
+    </script>
+  </body>
+</html>

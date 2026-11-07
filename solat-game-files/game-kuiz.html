@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ms">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kuiz Dadu Solat</title>
+    <style>
+      :root {
+        --primary: #2D9596; --primary-dark: #1F6B6C; --blue: #1B64C8; --blue-dark: #0F4FA8;
+        --yellow: #FFD93B; --yellow-dark: #F2B705; --cream: #FFF8E6; --ink: #232B2B; --muted: #4B5A5A;
+        --display: "Arial Rounded MT Bold", "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+        --p0: #1B64C8; --p1: #D32F2F; --p2: #2E9E4A; --p3: #7A3FD6;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; font-family: "Segoe UI", Arial, sans-serif; color: var(--ink); }
+      body { background: #8FD3F4; }
+      #game-world {
+        min-height: 100vh;
+        background-color: #8FD3F4;
+        background-image: linear-gradient(180deg, #8FD3F4 0%, #CFEFFF 45%, #9BDB6E 100%);
+        background-size: cover; background-position: center bottom; background-repeat: no-repeat; background-attachment: fixed;
+      }
+      .wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: 10px 12px 28px; }
+      button { font-family: inherit; }
+
+      /* ---------- Header ---------- */
+      .head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }
+      .home {
+        display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; border: 4px solid #fff;
+        background: linear-gradient(160deg, #A56BF0, #7A3FD6); box-shadow: 0 5px 0 #5B2AAE, 0 8px 16px rgba(60,20,120,.35);
+        color: #fff; text-decoration: none; transition: transform .15s;
+      }
+      .home svg { width: 27px; height: 27px; }
+      .home:hover { transform: translateY(-2px) scale(1.05); } .home:active { transform: translateY(3px); }
+      .title-wrap { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+      .title { margin: 0; display: flex; flex-direction: column; align-items: center; font-family: var(--display); font-weight: 900; line-height: .95;
+        -webkit-text-stroke: 7px var(--blue); paint-order: stroke fill; text-shadow: 0 4px 0 var(--blue-dark); }
+      .title .a { font-size: clamp(24px, 3.4vw, 42px); color: var(--yellow); } .title .b { font-size: clamp(28px, 4.2vw, 52px); color: #fff; }
+      .ribbon { margin: 6px 0 0; padding: 4px 18px; border-radius: 8px; background: linear-gradient(180deg,#FFF3B0,#FFE680); border: 2px solid #F2D14B;
+        color: #14306B; font-family: var(--display); font-size: 14px; font-weight: 700; text-align: center; }
+      .stats { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 24px; background: linear-gradient(180deg,#fff,#DDF1FF);
+        border: 3px solid #fff; box-shadow: 0 5px 14px rgba(20,70,140,.25); }
+      .pill { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 13px; border-radius: 19px; white-space: nowrap;
+        background: linear-gradient(180deg,#2A78DD,#0F4FA8); border: 2px solid #7DB8FF; color: #fff; font-family: var(--display); font-size: 15px; font-weight: 700; }
+      .pill.gold { background: linear-gradient(180deg,#FFE27A,#FFC01F); border: 3px solid #F59E0B; color: #6B3A00; }
+      .iconbtn { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #BFDDF8; background: #fff; font-size: 17px; cursor: pointer; }
+
+      /* ---------- Susun atur ---------- */
+      .layout { display: grid; gap: 14px; margin-top: 12px; align-items: start; }
+      @media (min-width: 940px) { .layout { grid-template-columns: minmax(0, 1.55fr) minmax(300px, .8fr); } }
+      .board-card { padding: 12px; border-radius: 28px; background: linear-gradient(180deg,#FFFDF2,#FFF4D0); border: 4px solid #FFEBA8;
+        box-shadow: 0 10px 24px rgba(60,90,30,.22), inset 0 0 0 3px rgba(255,255,255,.7); }
+      .board { position: relative; width: 100%; max-width: 700px; margin: 0 auto; aspect-ratio: 6 / 5; border-radius: 18px; overflow: hidden; border: 3px solid #E6D49A; background: #fff; }
+      .cells { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(5, 1fr); }
+      .sq { position: relative; display: flex; align-items: flex-start; justify-content: flex-start; padding: 4px 6px; border: 1px solid rgba(0,0,0,.06);
+        font-family: var(--display); font-weight: 900; font-size: clamp(11px, 1.8vw, 18px); color: rgba(20,48,107,.8); }
+      .sq:nth-child(odd) { background: #FFF6D6; } .sq:nth-child(even) { background: #E6F4FF; }
+      .sq.ladder-start { background: #DDF6D9 !important; } .sq.snake-start { background: #FFE0E0 !important; }
+      .sq.star { background: #FFF1A8 !important; } .sq.finish { background: linear-gradient(135deg,#FFE27A,#FFB81F) !important; }
+      .sq.first { background: #D8F1EE !important; }
+      .sq small { position: absolute; right: 5px; bottom: 3px; font-size: clamp(12px, 2vw, 20px); line-height: 1; }
+      svg.fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .tokens { position: absolute; inset: 0; pointer-events: none; }
+      .token { position: absolute; width: 7.4%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; border: 3px solid #fff;
+        color: #fff; font-family: var(--display); font-weight: 900; font-size: clamp(11px, 1.7vw, 18px); text-shadow: 0 1px 2px rgba(0,0,0,.4);
+        box-shadow: 0 3px 8px rgba(0,0,0,.4); transform: translate(calc(-50% + var(--ox, 0px)), calc(-50% + var(--oy, 0px))); transition: left .22s linear, top .22s linear; z-index: 3; }
+      .token.slide { transition: left .7s ease-in-out, top .7s ease-in-out; }
+      .token.active { animation: bob .7s infinite alternate; z-index: 4; } @keyframes bob { to { margin-top: -6px; } }
+
+      /* ---------- Panel kanan ---------- */
+      .side { display: flex; flex-direction: column; gap: 12px; }
+      .panel { padding: 12px; border-radius: 24px; background: linear-gradient(180deg,#EAF7FF,#CFEAFB); border: 4px solid #FFEBA8;
+        box-shadow: 0 10px 24px rgba(20,70,140,.22), inset 0 0 0 3px rgba(255,255,255,.7); }
+      .turn { padding: 9px 14px; border-radius: 16px; background: linear-gradient(180deg,#2A78DD,#0F4FA8); border: 2px solid #7DB8FF; color: #fff;
+        font-family: var(--display); font-size: 15px; font-weight: 700; line-height: 1.3; }
+      .dice-row { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+      .dice { width: 78px; height: 78px; flex: none; padding: 9px; border-radius: 18px; background: #fff; border: 3px solid #C62828; display: grid;
+        grid-template: repeat(3,1fr) / repeat(3,1fr); box-shadow: 0 5px 0 #0E3F8F, 0 8px 14px rgba(0,0,0,.25); }
+      .dice.roll { animation: shake .18s infinite alternate; } @keyframes shake { from { transform: rotate(-9deg) translateY(-2px); } to { transform: rotate(9deg) translateY(2px); } }
+      .pip { width: 100%; height: 100%; border-radius: 50%; } .pip.on { background: #C62828; transform: scale(.78); }
+      .plist { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+      .prow { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 9px; padding: 7px 10px; border-radius: 14px; background: #fff; border: 3px solid #E6EEF5; }
+      .prow.on { border-color: var(--yellow-dark); background: #FFF9D6; box-shadow: 0 0 0 3px rgba(242,183,5,.25); }
+      .dot { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,.3); }
+      .pname { font-family: var(--display); font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .pname small { display: block; font-family: "Segoe UI", Arial; font-weight: 400; font-size: 11px; color: var(--muted); }
+      .pscore { text-align: right; font-size: 12px; color: var(--muted); } .pscore b { display: block; font-size: 15px; color: #B45309; font-family: var(--display); }
+      .mascot { display: flex; align-items: flex-end; gap: 8px; }
+      .mascot img { height: 110px; width: auto; filter: drop-shadow(0 6px 8px rgba(0,0,0,.28)); }
+      .bubble { position: relative; margin-bottom: 34px; padding: 9px 14px; border-radius: 20px; background: linear-gradient(180deg,#2BB3D8,#1488B0); border: 3px solid #fff;
+        box-shadow: 0 5px 12px rgba(0,0,0,.25); color: #fff; font-family: var(--display); font-size: 13px; font-weight: 700; line-height: 1.3; }
+      .bubble::before { content: ""; position: absolute; left: -12px; bottom: 12px; border: 8px solid transparent; border-right: 12px solid #fff; }
+      .toast { position: fixed; left: 50%; bottom: 22px; z-index: 3000; max-width: min(92vw, 460px); padding: 10px 18px; border-radius: 16px; transform: translate(-50%, 14px);
+        background: #14306B; border: 2px solid var(--yellow); color: #fff; font-family: var(--display); font-size: 14px; font-weight: 700; text-align: center;
+        opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
+      .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+      /* ---------- Butang ---------- */
+      .btn { min-width: 150px; padding: 12px 20px; border-radius: 22px; border: 3px solid #fff; font-family: var(--display); font-size: 16px; font-weight: 900; cursor: pointer;
+        box-shadow: 0 5px 0 rgba(0,0,0,.22), 0 9px 16px rgba(0,0,0,.18); transition: transform .12s, filter .12s; }
+      .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.06); } .btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.22); }
+      .btn:disabled { opacity: .55; cursor: not-allowed; filter: grayscale(.3); }
+      .btn.green { background: linear-gradient(180deg,#4BD36F,#1E9446); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
+      .btn.gold { background: linear-gradient(180deg,#FFE27A,#FFB81F); color: #6B3A00; }
+      .btn.white { background: linear-gradient(180deg,#fff,#DDF1FF); color: var(--blue-dark); border-color: #9CCBF5; }
+      .btn.red { background: linear-gradient(180deg,#FF8A8A,#D32F2F); color: #fff; }
+      .btn.big { width: 100%; padding: 15px 20px; font-size: 18px; }
+      .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .btn.small { min-width: 0; padding: 8px 12px; font-size: 13px; }
+
+      /* ---------- Modal ---------- */
+      .overlay { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 14px; background: rgba(14,63,143,.55); backdrop-filter: blur(5px); animation: fade .2s; }
+      @keyframes fade { from { opacity: 0; } }
+      .dlg { width: min(560px, 100%); max-height: 94vh; overflow-y: auto; padding: 20px 20px 18px; border-radius: 28px; text-align: center;
+        background: linear-gradient(180deg,#fff,#FFF8E6); border: 5px solid var(--yellow); box-shadow: 0 16px 44px rgba(14,63,143,.45); }
+      .dlg h2 { margin: 6px 0 4px; font-family: var(--display); font-size: 26px; color: var(--blue-dark); }
+      .dlg p { margin: 4px 0 10px; color: #444; line-height: 1.5; }
+      .dlg .emoji { font-size: 54px; line-height: 1; }
+      .levels { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 10px 0; }
+      .lvl { padding: 10px 6px; border-radius: 16px; border: 3px solid #BFDDF8; background: #fff; cursor: pointer; font-family: var(--display); color: var(--blue-dark); }
+      .lvl .e { font-size: 28px; display: block; } .lvl b { display: block; font-size: 15px; } .lvl small { display: block; margin-top: 2px; font-family: "Segoe UI", Arial; font-size: 11px; color: var(--muted); }
+      .lvl.on { border-color: var(--blue); background: #EAF4FF; box-shadow: 0 0 0 4px rgba(27,100,200,.2); }
+      .prow-in { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: center; margin: 6px 0; }
+      .prow-in input { width: 100%; min-width: 0; padding: 10px 11px; border-radius: 12px; border: 3px solid #BFDDF8; background: #fff; font-size: 15px; font-family: var(--display); outline: none; }
+      .prow-in input:focus { border-color: var(--blue); } .prow-in input.bad { border-color: #D32F2F; box-shadow: 0 0 0 3px rgba(211,47,47,.15); }
+      .err { margin: 6px 0; padding: 7px 10px; border-radius: 12px; background: #FFE9E9; border: 2px solid #E86A6A; color: #A31515; font-size: 13px; font-weight: 700; text-align: left; }
+      .err[hidden] { display: none; }
+      .note { font-size: 12px; color: var(--muted); }
+
+      /* ---------- Soalan ---------- */
+      .qdlg { text-align: left; }
+      .qtop { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .qchip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px 4px 5px; border-radius: 999px; background: #fff; border: 2px solid #BFDDF8; font-family: var(--display); font-weight: 700; font-size: 14px; }
+      .qchip .dot { width: 22px; height: 22px; }
+      .qdice { margin-left: auto; padding: 4px 12px; border-radius: 999px; background: #FFF3B0; border: 2px solid #F2D14B; color: #6B4A00; font-family: var(--display); font-weight: 700; font-size: 13px; }
+      .tbar { height: 12px; margin: 10px 0; border-radius: 6px; overflow: hidden; background: #DDE8F3; }
+      .tbar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg,#4BD36F,#FFD93B); transform-origin: left; }
+      .tbar.low i { background: linear-gradient(90deg,#FF8A8A,#D32F2F); }
+      .qtext { margin: 6px 0 12px; font-family: var(--display); font-size: 20px; line-height: 1.35; color: #14306B; }
+      .opts { display: grid; gap: 9px; }
+      .opt { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border-radius: 16px; border: 3px solid #BFDDF8; background: #fff; text-align: left; cursor: pointer;
+        font-family: var(--display); font-size: 16px; color: #1c2d4a; transition: transform .1s, border-color .1s; }
+      .opt:hover:not(:disabled) { transform: translateX(3px); border-color: var(--blue); }
+      .opt .k { flex: none; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(180deg,#2A78DD,#0F4FA8); color: #fff; font-weight: 900; font-size: 14px; }
+      .opt.ok { border-color: #2E9E4A; background: #E3F7E7; } .opt.ok .k { background: #2E9E4A; }
+      .opt.no { border-color: #D32F2F; background: #FFE9E9; } .opt.no .k { background: #D32F2F; }
+      .opt:disabled { cursor: default; }
+      .fb { margin-top: 12px; padding: 10px 12px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
+      .fb.ok { background: #E3F7E7; border: 2px solid #2E9E4A; color: #17602B; } .fb.no { background: #FFF1E0; border: 2px solid #F59E0B; color: #7A4A00; }
+      .fb b.t { display: block; font-family: var(--display); font-size: 17px; margin-bottom: 2px; }
+      body.lvl-cilik .qtext { font-size: 25px; } body.lvl-cilik .opt { font-size: 19px; padding: 14px 14px; } body.lvl-cilik .opt .k { width: 36px; height: 36px; font-size: 17px; }
+
+      /* ---------- Keputusan & papan kedudukan ---------- */
+      .rtable, .lb-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: 14px; color: var(--ink); text-align: left; }
+      .rtable th, .lb-table th { padding: 2px 8px; font-size: 12px; color: #6B5B2A; }
+      .rtable td, .lb-table td { padding: 8px; background: #fff; border-top: 2px solid #E6EEF5; border-bottom: 2px solid #E6EEF5; }
+      .rtable td:first-child, .lb-table td:first-child { border-left: 2px solid #E6EEF5; border-radius: 12px 0 0 12px; }
+      .rtable td:last-child, .lb-table td:last-child { border-right: 2px solid #E6EEF5; border-radius: 0 12px 12px 0; }
+      .rtable tr.first td, .lb-row-me td { background: #FFF3B0; border-color: #F2D14B; }
+      .lb { z-index: 2100; } .lbcard { width: min(600px, 100%); max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+      .lbcard h2 { margin: 12px 0 2px; } .tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 7px; padding: 6px 12px; }
+      .tab { padding: 6px 14px; border-radius: 999px; border: 2px solid #BFDDF8; background: #fff; color: var(--blue-dark); font-family: var(--display); font-size: 14px; font-weight: 700; cursor: pointer; }
+      .tab.on { background: linear-gradient(180deg,#2A78DD,#0F4FA8); border-color: var(--blue-dark); color: #fff; }
+      .lbbody { overflow: auto; padding: 0 14px 4px; } .lb-empty { margin: 22px 8px; text-align: center; color: var(--muted); }
+      .lb-rank { width: 44px; font-weight: 900; font-size: 16px; white-space: nowrap; } .lb-name { font-weight: 700; } .lb-name small { display: block; font-weight: 400; font-size: 11px; color: #6B7A7A; }
+      .lbfoot { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 10px 14px 14px; }
+      .sortrow { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 6px; font-size: 13px; color: var(--muted); }
+      .confetti { position: fixed; top: -20px; z-index: 2500; font-size: 22px; pointer-events: none; animation: fall linear forwards; }
+      @keyframes fall { to { transform: translateY(110vh) rotate(540deg); opacity: .9; } }
+
+      @media (max-width: 760px) {
+        .head { grid-template-columns: auto 1fr; } .stats { grid-column: 1 / -1; justify-content: center; flex-wrap: wrap; }
+        .home { width: 46px; height: 46px; } .mascot img { height: 84px; }
+        .levels { grid-template-columns: 1fr; } .lvl { display: grid; grid-template-columns: auto 1fr; text-align: left; align-items: center; gap: 4px 10px; } .lvl .e { grid-row: 1 / 3; }
+        .prow-in { grid-template-columns: auto 1fr auto; }
+        .row2 { grid-template-columns: 1fr; } .dlg { padding: 16px 14px; }
+      }
+      @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+    </style>
+  </head>
+  <body>
+    <div id="game-world"><div id="app"></div></div>
+    <script>
+      /* ===================== KUIZ DADU SOLAT ===================== */
+      const $ = (s, r = document) => r.querySelector(s);
+      const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const shuffle = (a) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+      const fmt = (n) => String(n);
+
+      const HOME_URL = 'index.html';
+      const IMG_DIR = 'imej-kartun/';
+      const IMG = {
+        bg: { local: IMG_DIR + 'latar.webp', },
+        mascot: { local: IMG_DIR + 'maskot.webp', },
+      };
+
+      const MAX_ROUNDS = 15;
+      const BONUS = [50, 30, 20, 10];
+      const COLORS = ['#1B64C8', '#D32F2F', '#2E9E4A', '#7A3FD6'];
+      const OFFSETS = [[-9, -8], [9, -8], [-9, 9], [9, 9]];
+      const LEVELS = {
+        cilik: { name: 'Aras Rendah', emoji: '🌱', who: 'Tempoh masa', desc: 'Aras Rendah ialah tahap permulaan. Soalan asas tentang bilangan solat fardu dan rakaat, dengan masa 45 saat.', timer: 45, ladders: { 3: 12, 8: 19, 14: 25, 17: 26 }, snakes: { 16: 6, 28: 20 }, stars: [5, 10, 22] },
+        pelajar: { name: 'Asas Sederhana', emoji: '🌿', who: 'Tempoh masa', desc: 'Asas Sederhana ialah tahap pertengahan. Soalan tentang rukun solat, sujud dan bacaan asas, dengan masa 25 saat.', timer: 25, ladders: { 3: 12, 8: 19, 17: 26 }, snakes: { 16: 6, 24: 14, 28: 20 }, stars: [7, 15, 23] },
+        mahir: { name: 'Asas Tinggi', emoji: '🌳', who: 'Tempoh masa', desc: 'Asas Tinggi ialah tahap lanjutan. Soalan lebih mendalam tentang solat qasar, jamak dan hukum solat, dengan masa 18 saat.', timer: 18, ladders: { 8: 19, 17: 26 }, snakes: { 16: 6, 22: 11, 24: 14, 28: 12 }, stars: [5, 13, 21] },
+      };
+      const LEVEL_KEYS = ['cilik', 'pelajar', 'mahir'];
+
+      /* ===================== BANK SOALAN (mazhab Syafi'i, seperti diajar di Malaysia) =====================
+         Format: { q: soalan, o: [pilihan A, B, C, D], a: indeks jawapan betul (0-3), e: penjelasan }
+         Guru boleh menambah atau menyunting soalan di sini. Semak dengan ustaz atau ustazah sebelum digunakan. */
+      const QUESTIONS = {
+        cilik: [
+          { q: 'Berapakah bilangan solat fardu yang wajib dilakukan sehari semalam?', o: ['3', '4', '5', '6'], a: 2, e: 'Solat fardu ada lima: Subuh, Zohor, Asar, Maghrib dan Isyak.' },
+          { q: 'Solat Subuh mempunyai berapa rakaat?', o: ['2', '3', '4', '5'], a: 0, e: 'Solat Subuh 2 rakaat.' },
+          { q: 'Solat Maghrib mempunyai berapa rakaat?', o: ['2', '3', '4', '5'], a: 1, e: 'Solat Maghrib 3 rakaat.' },
+          { q: 'Solat Zohor mempunyai berapa rakaat?', o: ['2', '3', '4', '5'], a: 2, e: 'Solat Zohor 4 rakaat.' },
+          { q: 'Solat Isyak mempunyai berapa rakaat?', o: ['2', '3', '4', '5'], a: 2, e: 'Solat Isyak 4 rakaat.' },
+          { q: 'Apakah yang perlu kita lakukan sebelum bersolat untuk bersuci?', o: ['Berwuduk', 'Makan', 'Bermain', 'Tidur'], a: 0, e: 'Kita berwuduk sebelum bersolat. Jika berhadas besar, kita perlu mandi wajib.' },
+          { q: 'Ke arah manakah kita menghadap ketika bersolat?', o: ['Timur', 'Kiblat', 'Utara', 'Mana-mana arah'], a: 1, e: 'Kita menghadap kiblat, iaitu arah Kaabah di Makkah.' },
+          { q: 'Apakah ucapan untuk memulakan solat (takbiratul ihram)?', o: ['Allahu Akbar', 'Subhanallah', 'Alhamdulillah', 'Assalamualaikum'], a: 0, e: 'Solat dimulakan dengan melafazkan "Allahu Akbar".' },
+          { q: 'Gerakan solat yang meletakkan dahi ke lantai dinamakan?', o: ['Rukuk', 'Sujud', 'Iktidal', 'Qiyam'], a: 1, e: 'Meletakkan dahi ke lantai dipanggil sujud.' },
+          { q: 'Gerakan membongkok dengan kedua-dua tangan di lutut dinamakan?', o: ['Rukuk', 'Sujud', 'Salam', 'Takbir'], a: 0, e: 'Membongkok dengan tangan di lutut dipanggil rukuk.' },
+          { q: 'Kita menamatkan solat dengan?', o: ['Takbir', 'Salam', 'Sujud', 'Rukuk'], a: 1, e: 'Solat ditamatkan dengan salam, iaitu menoleh ke kanan dan ke kiri.' },
+          { q: 'Orang yang melaungkan azan dipanggil?', o: ['Imam', 'Muazzin', 'Khatib', 'Makmum'], a: 1, e: 'Orang yang melaungkan azan dipanggil muazzin.' },
+          { q: 'Siapakah yang memimpin solat berjemaah?', o: ['Imam', 'Muazzin', 'Makmum', 'Khatib'], a: 0, e: 'Imam memimpin solat berjemaah dan makmum mengikutnya.' },
+          { q: 'Pakaian untuk bersolat mestilah?', o: ['Bersih dan menutup aurat', 'Berwarna merah sahaja', 'Baru dibeli', 'Mahal harganya'], a: 0, e: 'Pakaian solat mestilah bersih dan menutup aurat.' },
+          { q: 'Tempat umat Islam bersolat berjemaah dan beribadah ialah?', o: ['Pasar', 'Masjid', 'Stadium', 'Kedai'], a: 1, e: 'Umat Islam bersolat berjemaah di masjid atau surau.' },
+          { q: 'Surah yang wajib dibaca pada setiap rakaat solat ialah?', o: ['Al-Ikhlas', 'Al-Fatihah', 'An-Nas', 'Al-Kauthar'], a: 1, e: 'Surah Al-Fatihah wajib dibaca pada setiap rakaat.' },
+          { q: 'Solat fardu manakah dilakukan pada waktu pagi sebelum matahari terbit?', o: ['Subuh', 'Zohor', 'Maghrib', 'Isyak'], a: 0, e: 'Solat Subuh dilakukan sebelum matahari terbit.' },
+          { q: 'Antara anggota yang mesti menyentuh lantai ketika sujud ialah?', o: ['Dahi', 'Telinga', 'Bahu', 'Siku'], a: 0, e: 'Dahi, dua tapak tangan, dua lutut dan hujung jari kaki menyentuh lantai ketika sujud.' },
+          { q: 'Mengapakah kita bersolat?', o: ['Untuk beribadah dan mengingati Allah', 'Untuk mendapat hadiah', 'Kerana disuruh kawan', 'Untuk bermain'], a: 0, e: 'Kita bersolat untuk beribadah kepada Allah dan mengingati-Nya.' },
+          { q: 'Solat berjemaah yang dilakukan oleh lelaki Islam di masjid pada hari Jumaat ialah?', o: ['Solat Jumaat', 'Solat Hari Raya', 'Solat Jenazah', 'Solat Gerhana'], a: 0, e: 'Pada hari Jumaat, lelaki Islam menunaikan solat Jumaat berjemaah.' },
+        ],
+        pelajar: [
+          { q: "Mengikut mazhab Syafi'i, rukun solat ada berapa?", o: ['10', '13', '15', '17'], a: 1, e: "Dalam mazhab Syafi'i (seperti diajar di Malaysia), rukun solat ada 13." },
+          { q: 'Rukun solat yang pertama ialah?', o: ['Niat', 'Rukuk', 'Salam', 'Sujud'], a: 0, e: 'Rukun pertama ialah niat dalam hati ketika takbiratul ihram.' },
+          { q: 'Berapakah anggota yang mesti menyentuh lantai semasa sujud?', o: ['3', '5', '7', '9'], a: 2, e: 'Tujuh anggota: dahi, dua tapak tangan, dua lutut dan hujung jari kedua-dua kaki.' },
+          { q: 'Apakah maksud tamakninah?', o: ['Berhenti seketika dengan tenang dalam setiap gerakan', 'Membaca dengan kuat', 'Bergerak dengan cepat', 'Menutup mata'], a: 0, e: 'Tamakninah ialah berhenti seketika dengan tenang sehingga anggota tetap.' },
+          { q: 'Surah Al-Fatihah mempunyai berapa ayat?', o: ['5', '6', '7', '8'], a: 2, e: 'Surah Al-Fatihah mempunyai 7 ayat.' },
+          { q: 'Antara berikut, yang manakah syarat sah solat?', o: ['Menghadap kiblat', 'Berjemaah', 'Berpuasa', 'Membaca surah panjang'], a: 0, e: 'Menghadap kiblat ialah syarat sah solat. Berjemaah dan surah panjang bukan syarat sah.' },
+          { q: 'Apakah yang membatalkan wuduk?', o: ['Keluar sesuatu daripada qubul atau dubur', 'Makan', 'Minum', 'Berjalan'], a: 0, e: 'Keluarnya sesuatu daripada qubul atau dubur membatalkan wuduk.' },
+          { q: 'Rukun wuduk yang pertama ialah?', o: ['Niat', 'Membasuh muka', 'Menyapu kepala', 'Membasuh kaki'], a: 0, e: 'Rukun wuduk bermula dengan niat (dalam hati ketika membasuh muka), kemudian membasuh muka.' },
+          { q: 'Berapa kali sujud dilakukan dalam satu rakaat?', o: ['1', '2', '3', '4'], a: 1, e: 'Sujud dilakukan dua kali dalam setiap rakaat.' },
+          { q: 'Berapakah jumlah rakaat solat fardu lima waktu sehari semalam?', o: ['15', '17', '19', '20'], a: 1, e: 'Subuh 2 + Zohor 4 + Asar 4 + Maghrib 3 + Isyak 4 = 17 rakaat.' },
+          { q: 'Duduk antara dua sujud dilakukan dengan cara duduk?', o: ['Iftirasy', 'Tawarruk', 'Bersila', 'Mencangkung'], a: 0, e: "Dalam mazhab Syafi'i, duduk antara dua sujud ialah duduk iftirasy." },
+          { q: "Dalam mazhab Syafi'i, duduk tahiyat akhir dilakukan dengan cara duduk?", o: ['Iftirasy', 'Tawarruk', 'Bersila', 'Berdiri'], a: 1, e: 'Duduk tahiyat akhir ialah duduk tawarruk.' },
+          { q: "Bacaan \"Sami'allahu liman hamidah\" dilafazkan ketika?", o: ['Bangkit daripada rukuk', 'Sujud', 'Duduk tahiyat', 'Salam'], a: 0, e: 'Bacaan ini dilafazkan ketika bangkit daripada rukuk (iktidal).' },
+          { q: 'Bacaan ketika sujud ialah?', o: ["Subhana Rabbiyal A'la wa bihamdih", "Subhana Rabbiyal 'Azimi wa bihamdih", 'Allahu Akbar', 'Rabbighfir li'], a: 0, e: "Ketika sujud dibaca \"Subhana Rabbiyal A'la wa bihamdih\"." },
+          { q: 'Solat Jumaat menggantikan solat fardu yang mana pada hari Jumaat?', o: ['Subuh', 'Zohor', 'Asar', 'Isyak'], a: 1, e: 'Solat Jumaat menggantikan solat Zohor bagi yang menunaikannya.' },
+          { q: 'Solat Jumaat mempunyai berapa rakaat?', o: ['2', '3', '4', '5'], a: 0, e: 'Solat Jumaat 2 rakaat.' },
+          { q: 'Takbiratul ihram bermaksud?', o: ['Melafazkan "Allahu Akbar" bersama niat untuk memulakan solat', 'Memberi salam di akhir solat', 'Duduk antara dua sujud', 'Membaca tahiyat'], a: 0, e: 'Takbiratul ihram ialah melafazkan "Allahu Akbar" bersama niat untuk memulakan solat.' },
+          { q: 'Apakah batas aurat lelaki ketika bersolat?', o: ['Antara pusat dan lutut', 'Seluruh badan', 'Dari bahu ke kaki', 'Muka dan tangan'], a: 0, e: 'Aurat lelaki ketika solat ialah antara pusat dan lutut.' },
+          { q: 'Apakah aurat perempuan ketika bersolat?', o: ['Seluruh tubuh kecuali muka dan dua tapak tangan', 'Rambut sahaja', 'Antara pusat dan lutut', 'Kaki sahaja'], a: 0, e: 'Aurat perempuan ketika solat ialah seluruh tubuh kecuali muka dan dua tapak tangan.' },
+          { q: 'Waktu solat Asar bermula apabila?', o: ['Panjang bayang sesuatu benda melebihi panjang benda itu', 'Matahari terbit', 'Matahari terbenam', 'Tengah malam'], a: 0, e: "Waktu Asar bermula apabila bayang sesuatu benda melebihi panjangnya (selepas mengambil kira bayang waktu istiwa')." },
+        ],
+        mahir: [
+          { q: 'Mengikut pandangan yang diguna pakai di Malaysia, jarak minimum perjalanan untuk solat qasar ialah kira-kira?', o: ['40 km', '81 km', '150 km', '200 km'], a: 1, e: 'Jaraknya dua marhalah, iaitu kira-kira 81 km, mengikut pandangan yang diguna pakai di Malaysia.' },
+          { q: 'Solat jamak membolehkan musafir menghimpunkan?', o: ['Zohor dengan Asar, dan Maghrib dengan Isyak', 'Subuh dengan Zohor', 'Asar dengan Maghrib', 'Isyak dengan Subuh'], a: 0, e: 'Jamak ialah menghimpunkan Zohor dengan Asar, serta Maghrib dengan Isyak.' },
+          { q: 'Solat qasar ialah?', o: ['Memendekkan solat 4 rakaat kepada 2 rakaat', 'Menggabungkan dua solat', 'Menukar solat kepada duduk', 'Menambah rakaat solat'], a: 0, e: 'Qasar memendekkan solat fardu 4 rakaat (Zohor, Asar, Isyak) kepada 2 rakaat bagi musafir yang memenuhi syarat.' },
+          { q: "Sujud sahwi dilakukan antaranya kerana terlupa atau meninggalkan?", o: ["Sunat ab'adh", 'Rukun solat', 'Syarat sah solat', 'Wuduk'], a: 0, e: "Sujud sahwi menampung kekurangan akibat meninggalkan sunat ab'adh. Rukun yang tertinggal mesti dilakukan semula." },
+          { q: "Antara contoh sunat ab'adh dalam solat ialah?", o: ['Tahiyat awal', 'Niat', 'Takbiratul ihram', 'Salam'], a: 0, e: "Tahiyat awal (bersama duduknya) ialah sunat ab'adh. Niat, takbiratul ihram dan salam ialah rukun." },
+          { q: 'Makmum masbuk ialah makmum yang?', o: ['Ketinggalan sebahagian rakaat bersama imam', 'Tidak tahu bacaan solat', 'Berdiri di saf belakang sekali', 'Datang awal ke masjid'], a: 0, e: 'Masbuk ialah makmum yang tertinggal sebahagian rakaat bersama imam.' },
+          { q: 'Makmum masbuk dikira mendapat satu rakaat apabila sempat?', o: ['Rukuk bersama imam dengan tamakninah', 'Sujud sahaja', 'Duduk tahiyat sahaja', 'Salam bersama imam'], a: 0, e: 'Rakaat dikira sempat apabila makmum sempat rukuk bersama imam dengan tamakninah.' },
+          { q: 'Antara berikut, yang manakah membatalkan solat?', o: ['Bercakap dengan sengaja', 'Mengelip mata', 'Menguap', 'Menelan air liur'], a: 0, e: 'Bercakap dengan sengaja (bukan bacaan solat) membatalkan solat.' },
+          { q: 'Waktu solat Subuh berakhir apabila?', o: ['Terbit matahari', 'Tergelincir matahari', 'Masuk waktu Asar', 'Terbenam matahari'], a: 0, e: 'Waktu Subuh berakhir apabila matahari terbit.' },
+          { q: 'Waktu solat Zohor bermula apabila?', o: ['Matahari tergelincir dari tengah langit', 'Matahari terbit', 'Matahari terbenam', 'Masuk tengah malam'], a: 0, e: 'Waktu Zohor bermula apabila matahari tergelincir dari tengah langit.' },
+          { q: 'Solat jenazah dilakukan tanpa?', o: ['Rukuk dan sujud', 'Niat', 'Menghadap kiblat', 'Takbir'], a: 0, e: 'Solat jenazah dilakukan berdiri dengan empat takbir, tanpa rukuk dan sujud.' },
+          { q: "Dalam solat sunat Hari Raya (mazhab Syafi'i), takbir tambahan pada rakaat pertama ialah?", o: ['7 kali', '5 kali', '3 kali', '12 kali'], a: 0, e: 'Rakaat pertama 7 kali takbir tambahan, dan rakaat kedua 5 kali.' },
+          { q: "Rukun khutbah Jumaat mengikut mazhab Syafi'i ada berapa?", o: ['3', '4', '5', '6'], a: 2, e: 'Lima: memuji Allah, berselawat ke atas Nabi, berwasiat takwa, membaca ayat Al-Quran dalam salah satu khutbah, dan berdoa untuk mukminin dalam khutbah kedua.' },
+          { q: 'Solat sunat Witir dilakukan dengan bilangan rakaat?', o: ['Ganjil', 'Genap sahaja', 'Sentiasa 4', 'Sentiasa 10'], a: 0, e: 'Witir dilakukan dengan rakaat ganjil, sekurang-kurangnya 1 rakaat.' },
+          { q: 'Solat sunat rawatib muakkad sebelum Subuh ialah?', o: ['2 rakaat', '4 rakaat', '3 rakaat', '1 rakaat'], a: 0, e: 'Sunat qabliyah Subuh 2 rakaat.' },
+          { q: '"Tertib" sebagai rukun solat bermaksud?', o: ['Melakukan rukun mengikut urutan yang betul', 'Membaca dengan kuat', 'Bersolat berjemaah', 'Memakai pakaian kemas'], a: 0, e: 'Tertib ialah menyusun rukun solat mengikut urutan yang betul.' },
+          { q: 'Orang yang tidak mampu berdiri ketika solat fardu hendaklah?', o: ['Bersolat secara duduk', 'Tidak bersolat', 'Menangguhkan solat', 'Berniat sahaja'], a: 0, e: 'Jika tidak mampu berdiri, solat dilakukan secara duduk. Jika tidak mampu juga, berbaring mengikut kemampuan.' },
+          { q: 'Bagi orang yang dapat melihat Kaabah, kiblat yang wajib dihadap ialah?', o: ["'Ain Kaabah (Kaabah itu sendiri)", 'Arah barat sahaja', 'Arah Makkah secara umum', 'Mana-mana arah'], a: 0, e: "Orang yang dapat melihat Kaabah wajib menghadap 'ain Kaabah." },
+          { q: 'Antara solat sunat berikut, yang disunatkan berjemaah ialah?', o: ['Solat sunat Hari Raya', 'Solat sunat Tahajud', 'Solat sunat rawatib', 'Solat sunat Tahiyatul masjid'], a: 0, e: 'Solat sunat Hari Raya disunatkan berjemaah.' },
+          { q: "Hukum doa qunut pada solat Subuh dalam mazhab Syafi'i ialah?", o: ["Sunat ab'adh", 'Rukun', 'Makruh', 'Haram'], a: 0, e: "Doa qunut Subuh ialah sunat ab'adh. Jika ditinggalkan, disunatkan sujud sahwi." },
+        ],
+      };
+
+
+      /* ---------- Bunyi ---------- */
+      let audioCtx = null;
+      let muted = false;
+      try { muted = window.localStorage.getItem('ut-muted') === '1'; } catch (e) {}
+      function actx() {
+        if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+      }
+      function tone(f, d, type = 'sine', vol = 0.15, delay = 0) {
+        if (muted) return;
+        const c = actx(); if (!c) return;
+        const t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+        o.type = type; o.frequency.setValueAtTime(f, t);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+        o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + d + 0.03);
+      }
+      const SFX = {
+        tick: () => tone(520, 0.06, 'square', 0.05),
+        roll: () => tone(280 + Math.random() * 320, 0.05, 'square', 0.04),
+        correct: () => { tone(660, 0.12, 'triangle', 0.18); tone(880, 0.2, 'triangle', 0.18, 0.12); },
+        wrong: () => { tone(220, 0.25, 'sawtooth', 0.1); tone(165, 0.3, 'sawtooth', 0.09, 0.15); },
+        ladder: () => [400, 500, 620, 780].forEach((f, i) => tone(f, 0.1, 'triangle', 0.15, i * 0.09)),
+        snake: () => [600, 480, 360, 240].forEach((f, i) => tone(f, 0.12, 'sawtooth', 0.09, i * 0.1)),
+        star: () => [880, 1100, 1320].forEach((f, i) => tone(f, 0.1, 'sine', 0.15, i * 0.08)),
+        win: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.18, 'triangle', 0.18, i * 0.14)),
+      };
+
+      /* ---------- Simpanan papan kedudukan (setiap tahap berasingan) ---------- */
+      const memStore = {};
+      let storageOk = true;
+      const SKEY = (lv) => 'solat-ular-tangga:' + lv;
+      // Buang sebarang skor lama yang tersimpan dalam pelayar/peranti ini.
+      // Papan kedudukan kini hanya menunjukkan keputusan sesi semasa (dalam memori).
+      try {
+        LEVEL_KEYS.forEach((lv) => window.localStorage.removeItem('solat-ular-tangga:' + lv));
+        window.localStorage.removeItem('solat-kuiz-reset');
+      } catch (e) {}
+      function loadLevel(lv) {
+        return memStore[lv] || { entries: [], lastGroup: '' };
+      }
+      const LEVEL_TOP = 10;
+      function saveLevel(lv, d) {
+        d.entries = d.entries.slice().sort((a, b) => (isBetter(a, b) ? -1 : isBetter(b, a) ? 1 : 0)).slice(0, LEVEL_TOP);
+        memStore[lv] = d; // sesi semasa sahaja, tidak disimpan ke pelayar
+      }
+      const normName = (n) => String(n || '').normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+      const keyOf = (n, g) => normName(n) + '|' + normName(g);
+      const isBetter = (a, b) =>
+        a.score !== b.score ? a.score > b.score : a.correct !== b.correct ? a.correct > b.correct : a.turns !== b.turns ? a.turns < b.turns : a.finishedAt < b.finishedAt;
+      function bestPerPlayer(entries) {
+        const m = new Map();
+        entries.forEach((e) => { const k = keyOf(e.name, e.group); const c = m.get(k); if (!c || isBetter(e, c)) m.set(k, e); });
+        return [...m.values()];
+      }
+      function rankIndividuals(entries) {
+        const list = bestPerPlayer(entries).sort((a, b) => (isBetter(a, b) ? -1 : isBetter(b, a) ? 1 : 0));
+        list.forEach((e, i) => { const p = list[i - 1]; e._rank = p && p.score === e.score && p.correct === e.correct && p.turns === e.turns ? p._rank : i + 1; });
+        return list;
+      }
+      function rankGroups(entries, mode) {
+        const m = new Map();
+        bestPerPlayer(entries).forEach((e) => {
+          const g = String(e.group || '').trim(); if (!g) return;
+          const k = g.toLowerCase(); const c = m.get(k) || { name: g, members: 0, total: 0 };
+          c.members++; c.total += e.score; m.set(k, c);
+        });
+        const val = (x) => (mode === 'avg' ? x.avg : x.total);
+        const list = [...m.values()].map((x) => ({ ...x, avg: Math.round((x.total / x.members) * 10) / 10 }));
+        list.sort((a, b) => val(b) - val(a) || (mode === 'avg' ? b.total - a.total : b.avg - a.avg));
+        list.forEach((g, i) => { const p = list[i - 1]; g._rank = p && val(p) === val(g) ? p._rank : i + 1; });
+        return list;
+      }
+
+      /* ---------- Keadaan permainan ---------- */
+      const state = { level: 'cilik', players: [], cur: 0, round: 1, phase: 'setup', used: new Set(), raceId: 0 };
+      try { const lv = window.localStorage.getItem('ut-level'); if (LEVELS[lv]) state.level = lv; } catch (e) {}
+      const curPlayer = () => state.players[state.cur];
+
+      /* ---------- Gambar (fail tempatan dahulu, kemudian dalam talian) ---------- */
+      function loadImageChain(srcs, onOk) {
+        const tryAt = (i) => {
+          if (i >= srcs.length) return;
+          const im = new Image();
+          im.onload = () => onOk(srcs[i]);
+          im.onerror = () => tryAt(i + 1);
+          im.src = srcs[i];
+        };
+        tryAt(0);
+      }
+      loadImageChain([IMG.bg.local], (src) => {
+        const w = $('#game-world');
+        w.style.backgroundImage = `url("${src}")`;
+      });
+      function mascotImgHtml() {
+        return `<img src="${IMG.mascot.local}" alt="" draggable="false" onerror="this.style.display='none'">`;
+      }
+
+      /* ---------- Papan ---------- */
+      function posXY(n) {
+        const rb = Math.floor((n - 1) / 6), idx = (n - 1) % 6, col = rb % 2 === 0 ? idx : 5 - idx;
+        return { x: (col + 0.5) * 100, y: (4 - rb + 0.5) * 100 };
+      }
+      function ladderSvg(a, b) {
+        const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len, px = -uy * 11, py = ux * 11;
+        let s = `<g stroke-linecap="round">`;
+        [[1, '#7A4A0E', 7], [-1, '#7A4A0E', 7], [1, '#E0A33A', 3.5], [-1, '#E0A33A', 3.5]].forEach(([k, c, w]) => {
+          s += `<line x1="${a.x + px * k}" y1="${a.y + py * k}" x2="${b.x + px * k}" y2="${b.y + py * k}" stroke="${c}" stroke-width="${w}"/>`;
+        });
+        for (let d = 20; d < len - 14; d += 24) {
+          const cx = a.x + ux * d, cy = a.y + uy * d;
+          s += `<line x1="${cx + px}" y1="${cy + py}" x2="${cx - px}" y2="${cy - py}" stroke="#7A4A0E" stroke-width="5"/><line x1="${cx + px}" y1="${cy + py}" x2="${cx - px}" y2="${cy - py}" stroke="#E0A33A" stroke-width="2.4"/>`;
+        }
+        return s + '</g>';
+      }
+      function snakeSvg(h, t, flip) {
+        const dx = t.x - h.x, dy = t.y - h.y, len = Math.hypot(dx, dy), nx = -dy / len, ny = dx / len, k = flip ? -1 : 1;
+        const c1 = { x: h.x + dx * 0.3 + nx * 46 * k, y: h.y + dy * 0.3 + ny * 46 * k };
+        const c2 = { x: h.x + dx * 0.7 - nx * 46 * k, y: h.y + dy * 0.7 - ny * 46 * k };
+        const d = `M ${h.x} ${h.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${t.x} ${t.y}`;
+        return `<g stroke-linecap="round" fill="none">
+          <path d="${d}" stroke="#14602A" stroke-width="19"/><path d="${d}" stroke="#34B956" stroke-width="14"/>
+          <path d="${d}" stroke="#B8F0A6" stroke-width="3" stroke-dasharray="3 13"/>
+          <circle cx="${h.x}" cy="${h.y}" r="15" fill="#34B956" stroke="#14602A" stroke-width="4"/>
+          <circle cx="${h.x - 5}" cy="${h.y - 4}" r="4.6" fill="#fff"/><circle cx="${h.x + 5}" cy="${h.y - 4}" r="4.6" fill="#fff"/>
+          <circle cx="${h.x - 5}" cy="${h.y - 3.5}" r="2.2" fill="#14306B"/><circle cx="${h.x + 5}" cy="${h.y - 3.5}" r="2.2" fill="#14306B"/>
+          <path d="M ${h.x} ${h.y + 7} l 0 7 m 0 0 l -3 3 m 3 -3 l 3 3" stroke="#D32F2F" stroke-width="2"/></g>`;
+      }
+      function buildBoard() {
+        const lv = LEVELS[state.level];
+        let cells = '';
+        for (let r = 0; r < 5; r++) {
+          const rb = 4 - r;
+          for (let c = 0; c < 6; c++) {
+            const n = rb % 2 === 0 ? rb * 6 + c + 1 : rb * 6 + (5 - c) + 1;
+            const cls = ['sq', lv.ladders[n] ? 'ladder-start' : '', lv.snakes[n] ? 'snake-start' : '', lv.stars.includes(n) ? 'star' : '', n === 30 ? 'finish' : '', n === 1 ? 'first' : ''].join(' ');
+            const icon = n === 30 ? '🏁' : n === 1 ? '▶' : lv.ladders[n] ? '🪜' : lv.snakes[n] ? '🐍' : lv.stars.includes(n) ? '⭐' : '';
+            cells += `<div class="${cls}">${n}${icon ? `<small>${icon}</small>` : ''}</div>`;
+          }
+        }
+        let fx = '';
+        Object.entries(lv.ladders).forEach(([s, e]) => { fx += ladderSvg(posXY(+s), posXY(+e)); });
+        Object.entries(lv.snakes).forEach(([s, e], i) => { fx += snakeSvg(posXY(+s), posXY(+e), i % 2 === 1); });
+        $('#board').innerHTML = `<div class="cells">${cells}</div><svg class="fx" viewBox="0 0 600 500" preserveAspectRatio="none">${fx}</svg><div class="tokens" id="tokens"></div>`;
+        state.players.forEach((p, i) => {
+          const t = document.createElement('div');
+          t.className = 'token'; t.id = 'tok' + i; t.textContent = (p.name.trim()[0] || '?').toUpperCase();
+          t.style.background = COLORS[i]; t.style.setProperty('--ox', OFFSETS[i][0] + 'px'); t.style.setProperty('--oy', OFFSETS[i][1] + 'px');
+          $('#tokens').appendChild(t); placeToken(i);
+        });
+      }
+      function placeToken(i) {
+        const p = state.players[i], t = $('#tok' + i); if (!t) return;
+        const xy = posXY(p.pos); t.style.left = (xy.x / 600) * 100 + '%'; t.style.top = (xy.y / 500) * 100 + '%';
+      }
+      function markActive() {
+        state.players.forEach((_, i) => { const t = $('#tok' + i); if (t) t.classList.toggle('active', i === state.cur && state.phase !== 'over'); });
+      }
+
+      /* ---------- Antara muka permainan ---------- */
+      const FACES = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+      function showFace(v) { $('#dice').innerHTML = Array.from({ length: 9 }, (_, i) => `<span class="pip${FACES[v].includes(i) ? ' on' : ''}"></span>`).join(''); }
+      function say(msg) { const b = $('#bubble'); if (b) b.textContent = msg; }
+      let toastTimer = null;
+      function toast(msg) {
+        let el = $('#toast'); if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); }
+        el.textContent = msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+      }
+      function updatePanel() {
+        const rows = state.players.map((p, i) => `
+          <div class="prow ${i === state.cur && state.phase !== 'over' ? 'on' : ''}">
+            <span class="dot" style="background:${COLORS[i]}"></span>
+            <span class="pname">${esc(p.name)}${p.group ? `<small>${esc(p.group)}</small>` : ''}</span>
+            <span class="pscore"><b>⭐ ${p.points}</b>Petak ${p.pos}</span>
+          </div>`).join('');
+        $('#plist').innerHTML = rows;
+        $('#round').textContent = `Pusingan ${Math.min(state.round, MAX_ROUNDS)}/${MAX_ROUNDS}`;
+      }
+      function setPhase(ph) {
+        state.phase = ph;
+        const roll = $('#btn-roll'); if (roll) roll.disabled = ph !== 'idle';
+        markActive(); updatePanel();
+      }
+
+      function renderGame() {
+        const lv = LEVELS[state.level];
+        document.body.className = 'lvl-' + state.level;
+        $('#app').innerHTML = `
+          <div class="wrap">
+            <div class="head">
+              <a class="home" href="${HOME_URL}" title="Kembali" aria-label="Kembali"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6 1.9 11.4a1 1 0 0 0 .66 1.76H4.5V20a1.4 1.4 0 0 0 1.4 1.4h3.7v-5.2h4.8v5.2h3.7a1.4 1.4 0 0 0 1.4-1.4v-6.84h1.94a1 1 0 0 0 .66-1.76L12 2.6Z"/></svg></a>
+              <div class="title-wrap"><h1 class="title"><span class="a">Kuiz Dadu</span><span class="b">Solat</span></h1>
+                <p class="ribbon">Jawab soalan dengan betul untuk maju ke petak 30!</p></div>
+              <div class="stats"><span class="pill">${lv.emoji} Tahap ${lv.name}</span><span class="pill gold" id="round"></span>
+                <button class="iconbtn" id="btn-mute" title="Bunyi" aria-label="Bunyi">${muted ? '🔇' : '🔊'}</button></div>
+            </div>
+            <div class="layout">
+              <div class="board-card"><div class="board" id="board"></div></div>
+              <div class="side">
+                <div class="panel">
+                  <div class="turn" id="turn"></div>
+                  <div class="dice-row"><div class="dice" id="dice"></div>
+                    <button class="btn green big" id="btn-roll">🎲 Lambung Dadu</button></div>
+                  <div class="plist" id="plist"></div>
+                  <div style="margin-top:10px"><button class="btn white small" id="btn-end">🏁 Tamatkan Perlumbaan</button></div>
+                </div>
+                <div class="mascot">${mascotImgHtml()}<div class="bubble" id="bubble"></div></div>
+              </div>
+            </div>
+          </div>`;
+        buildBoard(); showFace(1); updatePanel();
+        $('#btn-roll').addEventListener('click', onRoll);
+        $('#btn-mute').addEventListener('click', () => {
+          muted = !muted; try { window.localStorage.setItem('ut-muted', muted ? '1' : '0'); } catch (e) {}
+          $('#btn-mute').textContent = muted ? '🔇' : '🔊';
+        });
+        let endArmed = false, endTimer = null;
+        $('#btn-end').addEventListener('click', () => {
+          if (state.phase === 'over') return;
+          if (!endArmed) { endArmed = true; $('#btn-end').textContent = 'Tekan lagi untuk tamat'; clearTimeout(endTimer); endTimer = setTimeout(() => { endArmed = false; const b = $('#btn-end'); if (b) b.textContent = '🏁 Tamatkan Perlumbaan'; }, 3000); return; }
+          if (state.phase === 'idle') finishRace('manual');
+          else toast('Tunggu giliran ini selesai dahulu.');
+        });
+      }
+
+      /* ---------- Modal ---------- */
+      const openModals = [];
+      function modal(html, cls = '', overlayCls = '') {
+        const ov = document.createElement('div'); ov.className = 'overlay ' + overlayCls;
+        const dlg = document.createElement('div'); dlg.className = 'dlg ' + cls; dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.innerHTML = html;
+        ov.appendChild(dlg); document.body.appendChild(ov);
+        const m = { ov, dlg, close() { ov.remove(); const i = openModals.indexOf(m); if (i >= 0) openModals.splice(i, 1); } };
+        openModals.push(m); return m;
+      }
+
+      /* ---------- Soalan ---------- */
+      function pickQuestion() {
+        const bank = QUESTIONS[state.level];
+        let free = bank.map((_, i) => i).filter((i) => !state.used.has(i));
+        if (!free.length) { state.used.clear(); free = bank.map((_, i) => i); }
+        const i = free[Math.floor(Math.random() * free.length)];
+        state.used.add(i); return bank[i];
+      }
+      function speak(text) {
+        try {
+          if (!('speechSynthesis' in window)) return;
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(text); u.lang = 'ms-MY'; u.rate = 0.9; window.speechSynthesis.speak(u);
+        } catch (e) {}
+      }
+      function askQuestion(p, q, dice, pi) {
+        return new Promise((resolve) => {
+          const lv = LEVELS[state.level];
+          const opts = shuffle(q.o.map((t, i) => ({ t, ok: i === q.a })));
+          const hasTts = 'speechSynthesis' in window;
+          const m = modal(`
+            <div class="qtop"><span class="qchip"><span class="dot" style="background:${COLORS[pi]}"></span>${esc(p.name)}</span>
+              <span class="qdice">🎲 ${dice} · betul = maju ${dice} petak</span></div>
+            <div class="tbar" id="tbar"><i></i></div>
+            <div class="qtext">${esc(q.q)}</div>
+            <div class="opts">${opts.map((o, i) => `<button class="opt" data-i="${i}"><span class="k">${'ABCD'[i]}</span><span>${esc(o.t)}</span></button>`).join('')}</div>
+            <div id="qfb"></div>
+            `, 'qdlg');
+          let done = false, id = null; const t0 = Date.now(), total = lv.timer * 1000;
+          const bar = $('#tbar', m.dlg), fill = $('i', bar);
+          const onKey = (e) => { const k = { '1': 0, '2': 1, '3': 2, '4': 3, a: 0, b: 1, c: 2, d: 3 }[e.key.toLowerCase()]; if (k !== undefined && !done) finish(k); };
+          document.addEventListener('keydown', onKey);
+          function finish(sel) {
+            if (done) return; done = true; clearInterval(id); document.removeEventListener('keydown', onKey);
+            try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+            const btns = [...m.dlg.querySelectorAll('.opt')]; btns.forEach((b) => (b.disabled = true));
+            const ok = sel >= 0 && opts[sel].ok;
+            if (ok) SFX.correct(); else SFX.wrong();
+            btns.forEach((b, i) => { if (opts[i].ok) b.classList.add('ok'); else if (i === sel) b.classList.add('no'); });
+            const right = 'ABCD'[opts.findIndex((o) => o.ok)] + '. ' + esc(opts.find((o) => o.ok).t);
+            $('#qfb', m.dlg).innerHTML = `<div class="fb ${ok ? 'ok' : 'no'}"><b class="t">${ok ? '✅ Betul! +10 mata' : sel < 0 ? '⏰ Masa tamat' : '❌ Belum tepat'}</b>${ok ? '' : `Jawapan betul: <b>${right}</b><br>`}${esc(q.e)}</div>
+              <div style="margin-top:12px;text-align:center"><button class="btn green" id="btn-next">${ok ? `Maju ${dice} petak ▶` : 'Teruskan ▶'}</button></div>`;
+            $('#btn-next', m.dlg).addEventListener('click', () => { m.close(); resolve({ correct: ok, timeout: sel < 0 }); });
+            const nx = $('#btn-next', m.dlg); if (nx) nx.focus();
+          }
+          m.dlg.querySelectorAll('.opt').forEach((b) => b.addEventListener('click', () => finish(+b.dataset.i)));
+          id = setInterval(() => {
+            const left = Math.max(0, total - (Date.now() - t0)); fill.style.transform = `scaleX(${left / total})`; bar.classList.toggle('low', left < total * 0.3);
+            if (left <= 0) finish(-1);
+          }, 100);
+        });
+      }
+
+      /* ---------- Giliran ---------- */
+      async function rollDice() {
+        const d = $('#dice'); d.classList.add('roll');
+        const end = Date.now() + 800;
+        while (Date.now() < end) { showFace(1 + Math.floor(Math.random() * 6)); SFX.roll(); await sleep(80); }
+        d.classList.remove('roll');
+        const v = 1 + Math.floor(Math.random() * 6); showFace(v); return v;
+      }
+      async function moveBy(p, i, n) {
+        for (let s = 0; s < n && p.pos < 30; s++) { p.pos++; placeToken(i); SFX.tick(); await sleep(230); }
+        updatePanel();
+      }
+      async function applySpecial(p, i) {
+        const lv = LEVELS[state.level], t = $('#tok' + i);
+        const slide = async (to, msg, sfx) => {
+          toast(msg); sfx(); t.classList.add('slide'); p.pos = to; placeToken(i); await sleep(850); t.classList.remove('slide'); updatePanel();
+        };
+        if (lv.ladders[p.pos]) await slide(lv.ladders[p.pos], `🪜 Tangga! ${p.name} naik ke petak ${lv.ladders[p.pos]}`, SFX.ladder);
+        else if (lv.snakes[p.pos]) await slide(lv.snakes[p.pos], `🐍 Ular! ${p.name} turun ke petak ${lv.snakes[p.pos]}`, SFX.snake);
+        if (lv.stars.includes(p.pos)) { p.points += 20; p.stars++; toast(`⭐ Bonus 20 mata untuk ${p.name}!`); SFX.star(); updatePanel(); await sleep(600); }
+      }
+      async function onRoll() {
+        if (state.phase !== 'idle') return;
+        actx(); setPhase('rolling');
+        const i = state.cur, p = curPlayer();
+        const v = await rollDice();
+        say(`${p.name} mendapat ${v}. Jawab soalan untuk maju ${v} petak!`);
+        await sleep(450);
+        setPhase('question');
+        const res = await askQuestion(p, pickQuestion(), v, i);
+        p.answered++; p.turns++;
+        if (res.correct) {
+          p.correct++; p.points += 10; say(`Betul! ${p.name} maju ${v} petak. Hebat!`);
+          await moveBy(p, i, v); await applySpecial(p, i);
+        } else { say(res.timeout ? 'Masa tamat! Cuba lagi pada giliran seterusnya.' : 'Belum tepat. Jangan putus asa, cuba lagi!'); await sleep(500); }
+        if (p.pos >= 30) { await sleep(300); return finishRace('finish'); }
+        state.cur++;
+        if (state.cur >= state.players.length) { state.cur = 0; state.round++; }
+        if (state.round > MAX_ROUNDS) return finishRace('limit');
+        const nx = curPlayer();
+        $('#turn').textContent = `Giliran ${nx.name}: tekan Lambung Dadu!`; setPhase('idle'); say(`Giliran ${nx.name}!`);
+        $('#btn-roll').focus();
+      }
+
+      /* ---------- Tamat perlumbaan ---------- */
+      function confetti() {
+        const e = ['🎉', '⭐', '✨', '🎊', '🌟']; 
+        for (let i = 0; i < 36; i++) {
+          const s = document.createElement('span'); s.className = 'confetti'; s.textContent = e[i % e.length];
+          s.style.left = Math.random() * 100 + 'vw'; s.style.animationDuration = 2.2 + Math.random() * 2 + 's'; s.style.animationDelay = Math.random() * 0.8 + 's';
+          document.body.appendChild(s); setTimeout(() => s.remove(), 5200);
+        }
+      }
+      function finishRace(reason) {
+        if (state.phase === 'over') return;
+        setPhase('over');
+        const ps = state.players.map((p, i) => ({ p, i }));
+        ps.sort((a, b) => (b.p.pos >= 30) - (a.p.pos >= 30) || b.p.pos - a.p.pos || b.p.points - a.p.points);
+        const solo = state.players.length === 1, anyFinish = ps.some((x) => x.p.pos >= 30);
+        const d = loadLevel(state.level); const now = Date.now();
+        ps.forEach((x, rank) => {
+          const bonus = reason === 'manual' ? 0 : solo && x.p.pos < 30 ? 0 : BONUS[rank] || 0;
+          x.rank = rank + 1; x.bonus = bonus; x.total = x.p.points + bonus;
+          d.entries.push({ id: now + '-' + x.i + '-' + Math.random().toString(36).slice(2, 5), name: x.p.name, group: x.p.group || '', level: state.level, score: x.total, points: x.p.points, bonus,
+            correct: x.p.correct, answered: x.p.answered, turns: x.p.turns, pos: x.p.pos, finished: x.p.pos >= 30, rank: rank + 1, finishedAt: now + rank });
+        });
+        d.lastGroup = state.players[0].group || d.lastGroup; saveLevel(state.level, d);
+        const win = ps[0].p, lv = LEVELS[state.level];
+        const title = anyFinish ? `${esc(win.name)} menang!` : 'Perlumbaan tamat';
+        say(anyFinish ? `${win.name} sampai petak 30! Tahniah!` : 'Perlumbaan tamat. Lihat keputusan!');
+        if (anyFinish) { SFX.win(); confetti(); }
+        const rows = ps.map((x) => `<tr class="${x.rank === 1 ? 'first' : ''}"><td class="lb-rank">${['🥇', '🥈', '🥉'][x.rank - 1] || '#' + x.rank}</td>
+          <td class="lb-name">${esc(x.p.name)}${x.p.group ? `<small>${esc(x.p.group)}</small>` : ''}</td><td>${x.p.pos >= 30 ? '🏁 30' : x.p.pos}</td>
+          <td>${x.p.correct}/${x.p.answered}</td><td>${x.p.points}${x.bonus ? ` <small>+${x.bonus}</small>` : ''}</td><td><b>⭐ ${x.total}</b></td></tr>`).join('');
+        const m = modal(`<div class="emoji">${anyFinish ? '🏆' : '🏁'}</div><h2>${title}</h2>
+          <p>Tahap ${lv.emoji} ${lv.name} · ${reason === 'manual' ? 'Ditamatkan lebih awal (tiada bonus kedudukan)' : reason === 'limit' ? 'Had pusingan dicapai' : 'Sampai ke petak 30'}</p>
+          <table class="rtable"><thead><tr><th>#</th><th>Pemain</th><th>Petak</th><th>Betul</th><th>Mata</th><th>Jumlah</th></tr></thead><tbody>${rows}</tbody></table>
+          <p class="note">Mata = 10 setiap jawapan betul + 20 bonus petak ⭐. Bonus kedudukan: 50 / 30 / 20 / 10. Skor disimpan dalam papan kedudukan Tahap ${lv.name}.</p>
+          <div class="row2" style="margin-top:12px"><button class="btn green" id="r-new">🎲 Perlumbaan Baharu</button><button class="btn gold" id="r-lb">🏆 Papan Kedudukan</button></div>
+        `);
+        $('#r-new', m.dlg).addEventListener('click', () => { m.close(); showSetup(); });
+        $('#r-lb', m.dlg).addEventListener('click', () => openLeaderboard(state.level));
+      }
+
+      /* ---------- Papan kedudukan ---------- */
+      function csvCell(v) { let s = String(v == null ? '' : v); if (/^[=+\-@]/.test(s)) s = "'" + s; return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+      function exportCsv(lv) {
+        const d = loadLevel(lv);
+        const rows = [['Tahap', 'Nama', 'Kumpulan', 'Skor', 'Mata', 'Bonus', 'Betul', 'Dijawab', 'Giliran', 'Petak', 'Sampai 30', 'Kedudukan perlumbaan', 'Masa']];
+        d.entries.slice().sort((a, b) => a.finishedAt - b.finishedAt).forEach((e) => rows.push([LEVELS[lv].name, e.name, e.group, e.score, e.points, e.bonus, e.correct, e.answered, e.turns, e.pos, e.finished ? 'Ya' : 'Tidak', e.rank, new Date(e.finishedAt).toLocaleString()]));
+        const csv = '\ufeff' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n');
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        const a = document.createElement('a'); a.href = url; a.download = 'keputusan-ular-tangga-' + lv + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+      }
+      function openLeaderboard(startLevel) {
+        const old = $('#lb-ov'); if (old) old.remove();
+        let lvKey = startLevel || state.level, view = 'ind', gsort = 'total';
+        const m = modal('', 'lbcard', 'lb'); m.ov.id = 'lb-ov';
+        const medal = (r) => (r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : '#' + r);
+        const draw = () => {
+          const d = loadLevel(lvKey), ind = rankIndividuals(d.entries), grp = rankGroups(d.entries, gsort), lv = LEVELS[lvKey];
+          const me = state.players.map((p) => keyOf(p.name, p.group));
+          const body = view === 'ind'
+            ? (ind.length ? `<table class="lb-table"><thead><tr><th>#</th><th>Nama</th><th>Skor</th><th>Betul</th><th>Giliran</th></tr></thead><tbody>${ind.map((e) => `<tr class="${state.level === lvKey && me.includes(keyOf(e.name, e.group)) ? 'lb-row-me' : ''}"><td class="lb-rank">${medal(e._rank)}</td><td class="lb-name">${esc(e.name)}${e.group ? `<small>${esc(e.group)}</small>` : ''}</td><td><b>⭐ ${e.score}</b></td><td>${e.correct}/${e.answered}</td><td>${e.turns}</td></tr>`).join('')}</tbody></table>` : `<p class="lb-empty">Belum ada skor bagi Tahap ${lv.name}.</p>`)
+            : (grp.length ? `<div class="sortrow"><span>Susun ikut:</span><button class="tab ${gsort === 'total' ? 'on' : ''}" data-sort="total">Jumlah</button><button class="tab ${gsort === 'avg' ? 'on' : ''}" data-sort="avg">Purata</button></div><table class="lb-table"><thead><tr><th>#</th><th>Kumpulan</th><th>Ahli</th><th>Jumlah</th><th>Purata</th></tr></thead><tbody>${grp.map((g) => `<tr><td class="lb-rank">${medal(g._rank)}</td><td class="lb-name">${esc(g.name)}</td><td>${g.members}</td><td><b>⭐ ${g.total}</b></td><td>${g.avg}</td></tr>`).join('')}</tbody></table>` : `<p class="lb-empty">Belum ada kumpulan bagi Tahap ${lv.name}. Masukkan nama kumpulan semasa mendaftar pemain.</p>`);
+          m.dlg.innerHTML = `<h2>🏆 Papan Kedudukan</h2>
+            <div class="tabs">${LEVEL_KEYS.map((k) => `<button class="tab ${k === lvKey ? 'on' : ''}" data-lv="${k}">${LEVELS[k].emoji} ${LEVELS[k].name}</button>`).join('')}</div>
+            <div class="lbbody">${body}</div>
+            <p class="note" style="margin:4px 14px">Setiap tahap mempunyai papan kedudukan sendiri. Susunan: skor tertinggi, kemudian jawapan betul terbanyak, kemudian giliran paling sedikit. Setiap pemain dikira berdasarkan keputusan terbaiknya.<br><b>Hanya keputusan sesi semasa dipaparkan; skor tidak disimpan selepas halaman ditutup.</b></p>
+            <div class="lbfoot"><a class="btn white small" href="${HOME_URL}" style="text-decoration:none">Halaman Utama</a><button class="btn green small" data-act="close">Tutup</button></div>`;
+          m.dlg.querySelectorAll('[data-lv]').forEach((b) => b.addEventListener('click', () => { lvKey = b.dataset.lv; draw(); }));
+          m.dlg.querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => { gsort = b.dataset.sort; draw(); }));
+          $('[data-act="close"]', m.dlg).addEventListener('click', () => m.close());
+        };
+        m.ov.addEventListener('click', (e) => { if (e.target === m.ov) m.close(); });
+        draw();
+      }
+
+      /* ---------- Pendaftaran pemain ---------- */
+      function showSetup() {
+        state.phase = 'setup'; document.body.className = 'lvl-' + state.level;
+        if (!$('#board')) { $('#app').innerHTML = `<div class="wrap"><div class="head"><a class="home" href="${HOME_URL}" aria-label="Kembali"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6 1.9 11.4a1 1 0 0 0 .66 1.76H4.5V20a1.4 1.4 0 0 0 1.4 1.4h3.7v-5.2h4.8v5.2h3.7a1.4 1.4 0 0 0 1.4-1.4v-6.84h1.94a1 1 0 0 0 .66-1.76L12 2.6Z"/></svg></a><div class="title-wrap"><h1 class="title"><span class="a">Kuiz Dadu</span><span class="b">Solat</span></h1></div><span></span></div></div>`; }
+        let level = state.level; let rows = [{ n: '', g: '' }, { n: '', g: '' }];
+        rows[0].g = rows[1].g = '';
+        const m = modal('', 'setup');
+        const draw = () => {
+          m.dlg.innerHTML = `<div class="emoji">🎲</div><h2>Kuiz Dadu Solat</h2>
+            <p>Pilih tahap, kemudian daftarkan 1 hingga 4 pemain. Pemain bergilir menjawab soalan pada satu peranti.</p>
+            <div class="levels">${LEVEL_KEYS.map((k) => `<button class="lvl ${k === level ? 'on' : ''}" data-lv="${k}"><span class="e">${LEVELS[k].emoji}</span><b>${LEVELS[k].name}</b><small>${LEVELS[k].who} · ${LEVELS[k].timer} saat</small></button>`).join('')}</div>
+            <div id="prows">${rows.map((r, i) => `<div class="prow-in"><span class="dot" style="background:${COLORS[i]}"></span><input class="nm" data-i="${i}" maxlength="20" placeholder="Nama pemain ${i + 1}" value="${esc(r.n)}" autocomplete="off">${rows.length > 1 ? `<button class="iconbtn x" data-rm="${i}" aria-label="Buang">✕</button>` : '<span></span>'}</div>`).join('')}</div>
+            ${rows.length < 4 ? '<button class="btn white small" id="add">+ Tambah Pemain</button>' : ''}
+            <div class="err" id="err" role="alert" hidden></div>
+            <p class="note">${LEVELS[level].desc}</p>
+            <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:10px"><a class="btn white" href="${HOME_URL}" data-home style="text-decoration:none" aria-label="Halaman Utama"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" style="vertical-align:-4px;margin-right:4px"><path d="M12 2.6 1.9 11.4a1 1 0 0 0 .66 1.76H4.5V20a1.4 1.4 0 0 0 1.4 1.4h3.7v-5.2h4.8v5.2h3.7a1.4 1.4 0 0 0 1.4-1.4v-6.84h1.94a1 1 0 0 0 .66-1.76L12 2.6Z"/></svg>Halaman Utama</a><button class="btn green" id="go">▶ Mula Perlumbaan</button></div>`;
+          m.dlg.querySelectorAll('[data-lv]').forEach((b) => b.addEventListener('click', () => { level = b.dataset.lv; try { window.localStorage.setItem('ut-level', level); } catch (e) {} readRows();  draw(); }));
+          m.dlg.querySelectorAll('input').forEach((inp) => inp.addEventListener('input', () => { readRows(); validate(); }));
+          m.dlg.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => { readRows(); rows.splice(+b.dataset.rm, 1); draw(); }));
+          const add = $('#add', m.dlg); if (add) add.addEventListener('click', () => { readRows(); rows.push({ n: '', g: '' }); draw(); const ins = m.dlg.querySelectorAll('.nm'); ins[ins.length - 1].focus(); });
+          $('#go', m.dlg).addEventListener('click', start);
+          // Bunyi klik sebelum pulang ke halaman utama
+          const homeA = m.dlg.querySelector('[data-home]');
+          if (homeA) homeA.addEventListener('click', (e) => { e.preventDefault(); const u = homeA.href; tone(540, 0.05, 'sine', 0.12); setTimeout(() => { window.location.href = u; }, 260); });
+          m.dlg.querySelectorAll('input').forEach((inp) => inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); start(); } }));
+          validate();
+        };
+        function readRows() { m.dlg.querySelectorAll('.nm').forEach((el) => (rows[+el.dataset.i].n = el.value)); }
+        function validate() {
+          const names = rows.map((r) => normName(r.n)); let msg = '';
+          const bad = new Set();
+          if (names.some((n) => !n)) msg = 'Sila isi nama semua pemain sebelum mula bermain.';
+          rows.forEach((r, i) => {
+            if (!names[i]) return;
+            if (names.indexOf(names[i]) !== i) { bad.add(i); msg = msg || `Nama “${esc(r.n.trim())}” digunakan dua kali. Setiap pemain perlu nama yang berbeza.`; }
+          });
+          m.dlg.querySelectorAll('.nm').forEach((el) => el.classList.toggle('bad', bad.has(+el.dataset.i)));
+          const err = $('#err', m.dlg); if (err) { err.hidden = !msg; err.innerHTML = msg; }
+          const go = $('#go', m.dlg); if (go) go.disabled = bad.size > 0 || names.some((n) => !n);
+          return bad.size === 0 && !names.some((n) => !n);
+        }
+        function start() {
+          readRows(); if (!validate()) return;
+          const d = loadLevel(level), used = new Set(rows.map((r) => normName(r.n)).filter(Boolean));
+          let k = 0;
+          const players = rows.map((r) => {
+            let name = r.n.trim().replace(/\s+/g, ' ');
+              return { name, group: '', pos: 1, points: 0, correct: 0, answered: 0, turns: 0, stars: 0 };
+          });
+          // pemain dengan nama kosong mendapat nama automatik yang unik
+          m.close(); actx();
+          state.level = level; state.players = players; state.cur = 0; state.round = 1; state.used = new Set(); state.raceId++;
+          renderGame(); setPhase('idle'); markActive();
+          $('#turn').textContent = `Giliran ${players[0].name}: tekan Lambung Dadu!`;
+          say(`Jom bermain! Giliran ${players[0].name}.`); $('#btn-roll').focus();
+        }
+        draw();
+        setTimeout(() => { const f = m.dlg.querySelector('.nm'); if (f) f.focus(); }, 60);
+      }
+
+      showSetup();
+
+    </script>
+  </body>
+</html>
