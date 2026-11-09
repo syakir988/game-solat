@@ -11,6 +11,25 @@ KANDUNGAN PAKEJ
 - LESEN.txt             Syarat penggunaan
 - README.txt            Fail ini
 
+HAD DEMO
+1) Susun Rukun Solat
+   - Cabaran 1 dan 2 (Niat, Qiyam) boleh dimainkan.
+   - Imej cabaran 3 hingga 13 digantikan dengan ikon mangga.
+   - Kad jawapan semuanya dipaparkan (tiada ikon mangga pada kad).
+   - Kad jawapan tidak boleh diseret atau di-tap ke petak 3 hingga 13.
+
+2) Padankan Bacaan Solat
+   - Cabaran 1 dan 2 (Takbiratul Ihram, Rukuk) boleh dimainkan.
+   - Imej cabaran 3 hingga 6 digantikan dengan ikon mangga.
+   - Kad jawapan semuanya dipaparkan (tiada ikon mangga pada kad).
+   - Kad jawapan tidak boleh diseret atau di-tap ke petak 3 hingga 6.
+
+3) Kuiz Dadu Solat
+   - 2 pusingan dibenarkan. Satu pusingan ialah setiap pemain melambung
+     dadu sekali (2 pemain = 4 lambungan).
+   - Selepas itu paparan "Tempoh Percubaan Tamat" muncul dengan butang
+     Halaman Utama.
+
 KEPERLUAN
 - Pelayar moden: Chrome, Edge, Firefox, Safari (versi terkini).
 - Peranti: komputer, tablet atau telefon.
